@@ -18,55 +18,9 @@ RETRIES = 3
 TIMEOUT = 1
 UNIT = 200
 
-
-# class sunspecDID(enum.Enum):
-#     SINGLE_PHASE_INVERTER = 101
-#     SPLIT_PHASE_INVERTER = 102
-#     THREE_PHASE_INVERTER = 103
-#     SINGLE_PHASE_METER = 201
-#     SPLIT_PHASE_METER = 202
-#     WYE_THREE_PHASE_METER = 203
-#     DELTA_THREE_PHASE_METER = 204
-#     BATTERY_BASE = 802
-#     LI_BATTERY_BANK = 803
-#     LI_BATTERY_STRING = 804
-#     LI_BATTERY_MODULE = 805
-#     FLOW_BATTERY = 806
-#     FLOW_BATTERY_STRING = 807
-#     FLOW_BATTERY_MODULE = 808
-#     FLOW_BATTERY_STACK = 809
-#
-#
-# class inverterStatus(enum.Enum):
-#     I_STATUS_OFF = 1
-#     I_STATUS_SLEEPING = 2
-#     I_STATUS_STARTING = 3
-#     I_STATUS_MPPT = 4
-#     I_STATUS_THROTTLED = 5
-#     I_STATUS_SHUTTING_DOWN = 6
-#     I_STATUS_FAULT = 7
-#     I_STATUS_STANDBY = 8
-#
-#
-# class batteryStatus(enum.Enum):
-#     B_STATUS_OFF = 1
-#     B_STATUS_EMPTY = 2
-#     B_STATUS_DISCHARGING = 3
-#     B_STATUS_CHARGING = 4
-#     B_STATUS_FULL = 5
-#     B_STATUS_HOLDING = 6
-#     B_STATUS_TESTING = 7
-#
-
-# class connectionType(enum.Enum):
-#     RTU = 1
-#     TCP = 2
-
-
 class registerType(enum.Enum):
     INPUT = 1
     HOLDING = 2
-
 
 class registerDataType(enum.Enum):
     UINT16 = 1
@@ -77,91 +31,47 @@ class registerDataType(enum.Enum):
     ACC32 = 5
     FLOAT32 = 6
     SEFLOAT = 7
+    FLOAT64 = 8
     STRING = 9
 
+METER_TYPE_MAP = {
+    "0": "RTU",
+    "1": "TCP/IP",
+    "2": "UDP",
+    "3": "P1",
+    "4": "Other"
+}
 
-# SUNSPEC_NOTIMPLEMENTED = {
-#     "UINT16": 0xffff,
-#     "UINT32": 0xffffffff,
-#     "UINT64": 0xffffffffffffffff,
-#     "INT16": 0x8000,
-#     "SCALE": 0x8000,
-#     "ACC32": 0x00000000,
-#     "FLOAT32": 0x7fc00000,
-#     "SEFLOAT": 0xffffffff,
-#     "STRING": ""
-# }
+AVAILABILITY_MAP = {
+    "0": "Inoperable",
+    "1": "Operable"
+}
 
-# C_SUNSPEC_DID_MAP = {
-#     "101": "Single Phase Inverter",
-#     "102": "Split Phase Inverter",
-#     "103": "Three Phase Inverter",
-#     "201": "Single Phase Meter",
-#     "202": "Split Phase Meter",
-#     "203": "Wye 3P1N Three Phase Meter",
-#     "204": "Delta 3P Three Phase Meter",
-#     "802": "Battery",
-#     "803": "Lithium Ion Bank Battery",
-#     "804": "Lithium Ion String Battery",
-#     "805": "Lithium Ion Module Battery",
-#     "806": "Flow Battery",
-#     "807": "Flow String Battery",
-#     "808": "Flow Module Battery",
-#     "809": "Flow Stack Battery"
-# }
+MODE_3_STATE_MAP = {
+    "A": "Available, Car not connected",
+    "B1": "Available, Car connected, Not Charging",
+    "B2": "Available, Car connected, Not Charging",
+    "C1": "Available, Car connected, Not Charging",
+    "C2": "Car Charging",
+    "D1": "Available, Car connected, Not Charging",
+    "D2": "Car Charging",
+    "E": "Available, Car not connected",
+    "F": "Error"
+}
 
-INVERTER_STATUS_MAP = [
-    "Undefined",
-    "Off",
-    "Sleeping",
-    "Grid Monitoring",
-    "Producing",
-    "Producing (Throttled)",
-    "Shutting Down",
-    "Fault",
-    "Standby"
-]
-
-# BATTERY_STATUS_MAP = [
-#     "Off",
-#     "Standby",
-#     "Init",
-#     "Charge",
-#     "Discharge",
-#     "Fault",
-#     "Idle"
-# ]
-#
-# METER_REGISTER_OFFSETS = [
-#     0x0,
-#     0xae,
-#     0x15c
-# ]
-#
-# BATTERY_REGISTER_OFFSETS = [
-#     0x0,
-#     0x100
-# ]
-
+SETPOINT_MAP = {
+    "0": "No",
+    "1": "Yes"
+}
 
 class AlfenEve:
 
     model = "Alfen Eve"
-    #stopbits = 1
-    #parity = "N"
-    #baud = 115200
     wordorder = Endian.Big
-
-    # def __init__(
-    #     self, host=False, port=False,
-    #     device=False, stopbits=False, parity=False, baud=False,
-    #     timeout=TIMEOUT, retries=RETRIES, unit=UNIT,
-    #     parent=False
-    # ):
 
     def __init__(
         self, host=False, port=False,
-        timeout=TIMEOUT, retries=RETRIES, unit=UNIT,
+        timeout=TIMEOUT, retries=RETRIES,
         parent=False
     ):
 
@@ -170,30 +80,14 @@ class AlfenEve:
             self.timeout = parent.timeout
             self.retries = parent.retries
 
-            if unit:
-                self.unit = unit
-            else:
-                self.unit = parent.unit
-
             self.host = parent.host
             self.port = parent.port
         else:
             self.host = host
             self.port = port
 
-            # if stopbits:
-            #     self.stopbits = stopbits
-            #
-            # if (parity
-            #         and parity.upper() in ["N", "E", "O"]):
-            #     self.parity = parity.upper()
-            #
-            # if baud:
-            #     self.baud = baud
-
             self.timeout = timeout
             self.retries = retries
-            self.unit = unit
 
             self.client = ModbusTcpClient(
                 host=self.host,
@@ -202,16 +96,16 @@ class AlfenEve:
             )
 
     def __repr__(self):
-        return f"{self.model}({self.host}:{self.port}: timeout={self.timeout}, retries={self.retries}, unit={hex(self.unit)})"
+        return f"{self.model}({self.host}:{self.port}: timeout={self.timeout}, retries={self.retries})"
 
-    def _read_holding_registers(self, address, length):
+    def _read_holding_registers(self, slave, address, length):
         for i in range(self.retries):
             if not self.connected():
                 self.connect()
                 time.sleep(0.1)
                 continue
 
-            result = self.client.read_holding_registers(address, length, slave=self.unit)
+            result = self.client.read_holding_registers(address, length, slave=slave)
 
             if not isinstance(result, ReadHoldingRegistersResponse):
                 continue
@@ -222,8 +116,8 @@ class AlfenEve:
 
         return None
 
-    def _write_holding_register(self, address, value):
-        return self.client.write_registers(address=address, values=value, slave=self.unit)
+    def _write_holding_register(self, slave, address, value):
+        return self.client.write_registers(address=address, values=value, slave=slave)
 
     def _encode_value(self, data, dtype):
         builder = BinaryPayloadBuilder(byteorder=Endian.Big, wordorder=self.wordorder)
@@ -240,6 +134,8 @@ class AlfenEve:
             elif (dtype == registerDataType.FLOAT32 or
                   dtype == registerDataType.SEFLOAT):
                 builder.add_32bit_float(data)
+            elif dtype == registerDataType.FLOAT64:
+                builder.add_64bit_float(data)
             elif dtype == registerDataType.STRING:
                 builder.add_string(data)
             else:
@@ -262,28 +158,27 @@ class AlfenEve:
             elif dtype == registerDataType.INT16:
                 decoded = data.decode_16bit_int()
             elif (dtype == registerDataType.FLOAT32 or
-                  dtype == registerDataType.SEFLOAT):
+                dtype == registerDataType.SEFLOAT):
                 decoded = data.decode_32bit_float()
+            elif dtype == registerDataType.FLOAT64:
+                decoded = data.decode_64bit_float()
             elif dtype == registerDataType.STRING:
                 decoded = data.decode_string(length * 2).decode(encoding="utf-8", errors="ignore").replace("\x00", "").rstrip()
             else:
                 raise NotImplementedError(dtype)
 
-            # if decoded == SUNSPEC_NOTIMPLEMENTED[dtype.name]:
-            #     return vtype(False)
-            # else:
             return vtype(decoded)
         except NotImplementedError:
             raise
 
     def _read(self, value):
-        address, length, rtype, dtype, vtype, label, fmt, batch = value
+        slave, address, length, rtype, dtype, vtype, label, fmt, batch = value
 
         try:
             if rtype == registerType.INPUT:
-                return self._decode_value(self._read_input_registers(address, length), length, dtype, vtype)
+                return self._decode_value(self._read_input_registers(slave, address, length), length, dtype, vtype)
             elif rtype == registerType.HOLDING:
-                return self._decode_value(self._read_holding_registers(address, length), length, dtype, vtype)
+                return self._decode_value(self._read_holding_registers(slave, address, length), length, dtype, vtype)
             else:
                 raise NotImplementedError(rtype)
         except NotImplementedError:
@@ -296,8 +191,9 @@ class AlfenEve:
         addr_max = False
 
         for k, v in values.items():
-            v_addr = v[0]
-            v_length = v[1]
+            v_slave = v[0]
+            v_addr = v[1]
+            v_length = v[2]
 
             if addr_min is False:
                 addr_min = v_addr
@@ -315,9 +211,9 @@ class AlfenEve:
 
         try:
             if rtype == registerType.INPUT:
-                data = self._read_input_registers(offset, length)
+                data = self._read_input_registers(v_slave, offset, length)
             elif rtype == registerType.HOLDING:
-                data = self._read_holding_registers(offset, length)
+                data = self._read_holding_registers(v_slave, offset, length)
             else:
                 raise NotImplementedError(rtype)
 
@@ -325,7 +221,7 @@ class AlfenEve:
                 return results
 
             for k, v in values.items():
-                address, length, rtype, dtype, vtype, label, fmt, batch = v
+                slave, address, length, rtype, dtype, vtype, label, fmt, batch = v
 
                 if address > offset:
                     skip_bytes = address - offset
@@ -341,11 +237,11 @@ class AlfenEve:
         return results
 
     def _write(self, value, data):
-        address, length, rtype, dtype, vtype, label, fmt, batch = value
+        slave, address, length, rtype, dtype, vtype, label, fmt, batch = value
 
         try:
             if rtype == registerType.HOLDING:
-                return self._write_holding_register(address, self._encode_value(data, dtype))
+                return self._write_holding_register(slave, address, self._encode_value(data, dtype))
             else:
                 raise NotImplementedError(rtype)
         except NotImplementedError:
@@ -373,11 +269,11 @@ class AlfenEve:
         return self._write(self.registers[key], data)
 
     def read_all(self, rtype=registerType.HOLDING):
-        registers = {k: v for k, v in self.registers.items() if (v[2] == rtype)}
+        registers = {k: v for k, v in self.registers.items() if (v[3] == rtype)}
         results = {}
 
         for batch in range(1, len(registers)):
-            register_batch = {k: v for k, v in registers.items() if (v[7] == batch)}
+            register_batch = {k: v for k, v in registers.items() if (v[8] == batch)}
 
             if not register_batch:
                 break
@@ -397,243 +293,149 @@ class CarCharger(AlfenEve):
 
         self.registers = {
             # name, address, length, register, type, target type, description, unit, batch
-            "c_name": (0x64, 17, registerType.HOLDING, registerDataType.STRING, str, "ALF_1000", "", 1),
-            "c_manufacturer": (0x75, 5, registerType.HOLDING, registerDataType.STRING, str, "Alfen NV", "", 1),
-            "c_modbus_table_version": (0x7a, 1, registerType.HOLDING, registerDataType.INT16, int, "1", "", 1),
-            "c_firmware_version": (0x7b, 17, registerType.HOLDING, registerDataType.STRING, str, "3.4.0-2990", "", 1),
-            "c_platform_type": (0x8c, 17, registerType.HOLDING, registerDataType.STRING, str, "NG910", "", 1),
-            "c_station_serial_number": (0x9d, 11, registerType.HOLDING, registerDataType.STRING, str, "00000R000", "", 1),
-            "c_date_year": (0xa8, 1, registerType.HOLDING, registerDataType.INT16, int, "2019", "1yr", 1),
-            "c_date_month": (0xa9, 1, registerType.HOLDING, registerDataType.INT16, int, "03", "1mon", 1),
-            "c_date_day": (0xaa, 1, registerType.HOLDING, registerDataType.INT16, int, "11", "1d", 1),
-            "c_time_hour": (0xab, 1, registerType.HOLDING, registerDataType.INT16, int, "12", "1hr", 1),
-            "c_time_minute": (0xac, 1, registerType.HOLDING, registerDataType.INT16, int, "01", "1min", 1),
-            "c_time_second": (0xad, 1, registerType.HOLDING, registerDataType.INT16, int, "04", "1s", 1),
-            "c_uptime": (0xae, 4, registerType.HOLDING, registerDataType.UINT64, int, "100", "0.001s", 1),
-            "c_time_zone": (0xb2, 1, registerType.HOLDING, registerDataType.INT16, int, "Time zone offset to UTC in minutes", "1min", 1),
-            "station_active_max_current": (0x44c, 2, registerType.HOLDING, registerDataType.FLOAT32, int, "The Actual Max Current", "A", 2),
-            "temperature": (0x44e, 2, registerType.HOLDING, registerDataType.FLOAT32, int, "Board Temperature", "degrees Celsius", 2),
-            "ocpp_state": (0x450, 1, registerType.HOLDING, registerDataType.UINT16, int, "Back Office Connected", "", 2),
-            "nr_of_sockets": (0x451, 1, registerType.HOLDING, registerDataType.UINT16, int, "Number of Sockets", "", 2)
+            "c_name": (0xc8, 0x64, 17, registerType.HOLDING, registerDataType.STRING, str, "ALF_1000", "", 1),
+            "c_manufacturer": (0xc8, 0x75, 5, registerType.HOLDING, registerDataType.STRING, str, "Alfen NV", "", 1),
+            "c_modbus_table_version": (0xc8, 0x7a, 1, registerType.HOLDING, registerDataType.INT16, int, "1", "", 1),
+            "c_firmware_version": (0xc8, 0x7b, 17, registerType.HOLDING, registerDataType.STRING, str, "3.4.0-2990", "", 1),
+            "c_platform_type": (0xc8, 0x8c, 17, registerType.HOLDING, registerDataType.STRING, str, "NG910", "", 1),
+            "c_station_serial_number": (0xc8, 0x9d, 11, registerType.HOLDING, registerDataType.STRING, str, "00000R000", "", 1),
+            "c_date_year": (0xc8, 0xa8, 1, registerType.HOLDING, registerDataType.INT16, int, "2019", "1yr", 1),
+            "c_date_month": (0xc8, 0xa9, 1, registerType.HOLDING, registerDataType.INT16, int, "03", "1mon", 1),
+            "c_date_day": (0xc8, 0xaa, 1, registerType.HOLDING, registerDataType.INT16, int, "11", "1d", 1),
+            "c_time_hour": (0xc8, 0xab, 1, registerType.HOLDING, registerDataType.INT16, int, "12", "1hr", 1),
+            "c_time_minute": (0xc8, 0xac, 1, registerType.HOLDING, registerDataType.INT16, int, "01", "1min", 1),
+            "c_time_second": (0xc8, 0xad, 1, registerType.HOLDING, registerDataType.INT16, int, "04", "1s", 1),
+            "c_uptime": (0xc8, 0xae, 4, registerType.HOLDING, registerDataType.UINT64, int, "100", "0.001s", 1),
+            "c_time_zone": (0xc8, 0xb2, 1, registerType.HOLDING, registerDataType.INT16, int, "Time zone offset to UTC in minutes", "1min", 1),
 
-            #"meter_state": (0x12c, 1, registerType.HOLDING, registerDataType.UINT16, int, "Bitmask with state", "", 3)
+            "station_active_max_current": (0xc8, 0x44c, 2, registerType.HOLDING, registerDataType.FLOAT32, int, "The Actual Max Current", "A", 2),
+            "temperature": (0xc8, 0x44e, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Board Temperature", "degrees Celsius", 2),
+            "ocpp_state": (0xc8, 0x450, 1, registerType.HOLDING, registerDataType.UINT16, int, "Back Office Connected", "", 2),
+            "nr_of_sockets": (0xc8, 0x451, 1, registerType.HOLDING, registerDataType.UINT16, int, "Number of Sockets", "", 2),
 
-            # "current": (0x9c87, 1, registerType.HOLDING, registerDataType.UINT16, int, "Current", "A", 2),
-            # "l1_current": (0x9c88, 1, registerType.HOLDING, registerDataType.UINT16, int, "L1 Current", "A", 2),
-            # "l2_current": (0x9c89, 1, registerType.HOLDING, registerDataType.UINT16, int, "L2 Current", "A", 2),
-            # "l3_current": (0x9c8a, 1, registerType.HOLDING, registerDataType.UINT16, int, "L3 Current", "A", 2),
-            # "current_scale": (0x9c8b, 1, registerType.HOLDING, registerDataType.SCALE, int, "Current Scale Factor", "", 2),
-            #
-            # "l1_voltage": (0x9c8c, 1, registerType.HOLDING, registerDataType.UINT16, int, "L1 Voltage", "V", 2),
-            # "l2_voltage": (0x9c8d, 1, registerType.HOLDING, registerDataType.UINT16, int, "L2 Voltage", "V", 2),
-            # "l3_voltage": (0x9c8e, 1, registerType.HOLDING, registerDataType.UINT16, int, "L3 Voltage", "V", 2),
-            # "l1n_voltage": (0x9c8f, 1, registerType.HOLDING, registerDataType.UINT16, int, "L1-N Voltage", "V", 2),
-            # "l2n_voltage": (0x9c90, 1, registerType.HOLDING, registerDataType.UINT16, int, "L2-N Voltage", "V", 2),
-            # "l3n_voltage": (0x9c91, 1, registerType.HOLDING, registerDataType.UINT16, int, "L3-N Voltage", "V", 2),
-            # "voltage_scale": (0x9c92, 1, registerType.HOLDING, registerDataType.SCALE, int, "Voltage Scale Factor", "", 2),
-            #
-            # "power_ac": (0x9c93, 1, registerType.HOLDING, registerDataType.INT16, int, "Power", "W", 2),
-            # "power_ac_scale": (0x9c94, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power Scale Factor", "", 2),
-            #
-            # "frequency": (0x9c95, 1, registerType.HOLDING, registerDataType.UINT16, int, "Frequency", "Hz", 2),
-            # "frequency_scale": (0x9c96, 1, registerType.HOLDING, registerDataType.SCALE, int, "Frequency Scale Factor", "", 2),
-            #
-            # "power_apparent": (0x9c97, 1, registerType.HOLDING, registerDataType.INT16, int, "Power (Apparent)", "VA", 2),
-            # "power_apparent_scale": (0x9c98, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power (Apparent) Scale Factor", "", 2),
-            # "power_reactive": (0x9c99, 1, registerType.HOLDING, registerDataType.INT16, int, "Power (Reactive)", "VAr", 2),
-            # "power_reactive_scale": (0x9c9a, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power (Reactive) Scale Factor", "", 2),
-            # "power_factor": (0x9c9b, 1, registerType.HOLDING, registerDataType.INT16, int, "Power Factor", "%", 2),
-            # "power_factor_scale": (0x9c9c, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power Factor Scale Factor", "", 2),
-            #
-            # "energy_total": (0x9c9d, 2, registerType.HOLDING, registerDataType.ACC32, int, "Total Energy", "Wh", 2),
-            # "energy_total_scale": (0x9c9f, 1, registerType.HOLDING, registerDataType.SCALE, int, "Total Energy Scale Factor", "", 2),
-            #
-            # "current_dc": (0x9ca0, 1, registerType.HOLDING, registerDataType.UINT16, int, "DC Current", "A", 2),
-            # "current_dc_scale": (0x9ca1, 1, registerType.HOLDING, registerDataType.SCALE, int, "DC Current Scale Factor", "", 2),
-            #
-            # "voltage_dc": (0x9ca2, 1, registerType.HOLDING, registerDataType.UINT16, int, "DC Voltage", "V", 2),
-            # "voltage_dc_scale": (0x9ca3, 1, registerType.HOLDING, registerDataType.SCALE, int, "DC Voltage Scale Factor", "", 2),
-            #
-            # "power_dc": (0x9ca4, 1, registerType.HOLDING, registerDataType.INT16, int, "DC Power", "W", 2),
-            # "power_dc_scale": (0x9ca5, 1, registerType.HOLDING, registerDataType.SCALE, int, "DC Power Scale Factor", "", 2),
-            #
-            # "temperature": (0x9ca7, 1, registerType.HOLDING, registerDataType.INT16, int, "Temperature", "°C", 2),
-            # "temperature_scale": (0x9caa, 1, registerType.HOLDING, registerDataType.SCALE, int, "Temperature Scale Factor", "", 2),
-            #
-            # "status": (0x9cab, 1, registerType.HOLDING, registerDataType.UINT16, int, "Status", INVERTER_STATUS_MAP, 2),
-            # "vendor_status": (0x9cac, 1, registerType.HOLDING, registerDataType.UINT16, int, "Vendor Status", "", 2),
-            #
-            # "rrcr_state": (0xf000, 1, registerType.HOLDING, registerDataType.UINT16, int, "RRCR State", "", 3),
-            # "active_power_limit": (0xf001, 1, registerType.HOLDING, registerDataType.UINT16, int, "Active Power Limit", "%", 3),
-            # "cosphi": (0xf002, 2, registerType.HOLDING, registerDataType.FLOAT32, int, "CosPhi", "", 3)
+            "meter_state": (0x1, 0x12c, 1, registerType.HOLDING, registerDataType.UINT16, int, "Bitmask with state", "", 3),
+            "meter_last_value_timestamp": (0x1, 0x12d, 4, registerType.HOLDING, registerDataType.UINT64, int, "Milliseconds since last received measurement", "0.001s", 3),
+            "meter_type": (0x1, 0x131, 1, registerType.HOLDING, registerDataType.UINT16, int, "0:RTU, 1:TCP/IP, 2:UDP, 3:P1, 4:other", "", 3),
+
+            "voltage_phase_L1N": (0x1, 0x132, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Voltage Phase L1N", "V", 4),
+            "voltage_phase_L2N": (
+            0x1, 0x134, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Voltage Phase L2N", "V", 4),
+            "voltage_phase_L3N": (
+            0x1, 0x136, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Voltage Phase L3N", "V", 4),
+            "voltage_phase_L1L2": (
+            0x1, 0x138, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Voltage Phase L1L2", "V", 4),
+            "voltage_phase_L2L3": (
+                0x1, 0x13a, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Voltage Phase L2L3", "V", 4),
+            "voltage_phase_L3L1": (
+                0x1, 0x13c, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Voltage Phase L3L1", "V", 4),
+            "current_N": (
+                0x1, 0x13e, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Current through N", "A", 4),
+            "current_phase_L1": (
+                0x1, 0x140, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Current Phase L1", "A", 4),
+            "current_phase_L2": (
+                0x1, 0x142, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Current Phase L2", "A", 4),
+            "current_phase_L3": (
+                0x1, 0x144, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Current Phase L3", "A", 4),
+            "current_sum": (
+                0x1, 0x146, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Current Sum", "A", 4),
+
+            "power_factor_phase_L1": (
+                0x1, 0x148, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Power Factor Phase L1", "", 5),
+            "power_factor_phase_L2": (
+                0x1, 0x14a, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Power Factor Phase L2", "", 5),
+            "power_factor_phase_L3": (
+                0x1, 0x14c, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Power Factor Phase L3", "", 5),
+            "power_factor_sum": (
+                0x1, 0x14e, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Power Factor Sum", "", 5),
+            "frequency": (
+                0x1, 0x150, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Frequency", "Hz", 5),
+
+            "real_power_phase_L1": (
+                0x1, 0x152, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Real Power Phase L1", "W", 5),
+            "real_power_phase_L2": (
+                0x1, 0x154, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Real Power Phase L2", "W", 5),
+            "real_power_phase_L3": (
+                0x1, 0x156, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Real Power Phase L3", "W", 5),
+            "real_power_sum": (
+                0x1, 0x158, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Real Power Sum", "W", 5),
+
+            "apparent_power_phase_L1": (
+                0x1, 0x15a, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Apparent Power Phase L1", "VA", 5),
+            "apparent_power_phase_L2": (
+                0x1, 0x15c, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Apparent Power Phase L2", "VA", 5),
+            "apparent_power_phase_L3": (
+                0x1, 0x15e, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Apparent Power Phase L3", "VA", 5),
+            "apparent_power_sum": (
+                0x1, 0x160, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Apparent Power Sum", "VA", 5),
+
+            "reactive_power_phase_L1": (
+                0x1, 0x162, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Reactive Power Phase L1", "VAr", 5),
+            "reactive_power_phase_L2": (
+                0x1, 0x164, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Reactive Power Phase L2", "VAr", 5),
+            "reactive_power_phase_L3": (
+                0x1, 0x166, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Reactive Power Phase L3", "VAr", 5),
+            "reactive_power_sum": (
+                0x1, 0x168, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Reactive Power Sum", "VAr", 5),
+
+            "real_energy_delivered_phase_L1": (
+                0x1, 0x16a, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Delivered Phase L1", "Wh", 6),
+            "real_energy_delivered_phase_L2": (
+                0x1, 0x16e, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Delivered Phase L2", "Wh", 6),
+            "real_energy_delivered_phase_L3": (
+                0x1, 0x172, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Delivered Phase L3", "Wh", 6),
+            "real_energy_delivered_sum": (
+                0x1, 0x176, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Delivered Sum", "Wh", 6),
+
+            "real_energy_consumed_phase_L1": (
+                0x1, 0x17a, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Consumed Phase L1", "Wh", 6),
+            "real_energy_consumed_phase_L2": (
+                0x1, 0x17e, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Consumed Phase L2", "Wh", 6),
+            "real_energy_consumed_phase_L3": (
+                0x1, 0x182, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Consumed Phase L3", "Wh", 6),
+            "real_energy_consumed_sum": (
+                0x1, 0x186, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Real Energy Consumed Sum", "Wh", 6),
+
+            "apparent_energy_phase_L1": (
+                0x1, 0x18a, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Apparent Energy Phase L1", "VAh", 6),
+            "apparent_energy_phase_L2": (
+                0x1, 0x18e, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Apparent Energy Phase L2", "VAh", 6),
+            "apparent_energy_phase_L3": (
+                0x1, 0x192, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Apparent Energy Phase L3", "VAh", 6),
+            "apparent_energy_sum": (
+                0x1, 0x196, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Apparent Energy Sum", "VAh", 6),
+
+            "reactive_energy_phase_L1": (
+                0x1, 0x19a, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Reactive Energy Phase L1", "VArh", 6),
+            "reactive_energy_phase_L2": (
+                0x1, 0x19e, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Reactive Energy Phase L2", "VArh", 6),
+            "reactive_energy_phase_L3": (
+                0x1, 0x1a2, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Reactive Energy Phase L3", "VArh", 6),
+            "reactive_energy_sum": (
+                0x1, 0x1a6, 4, registerType.HOLDING, registerDataType.FLOAT64, float, "Reactive Energy Sum", "VArh", 6),
+
+            "availability": (
+                0x1, 0x4b0, 1, registerType.HOLDING, registerDataType.UINT16, int, "1: Operative; 0: Inoperative", "",
+                7),
+            "mode_3_state": (0x1, 0x4b1, 5, registerType.HOLDING, registerDataType.STRING, str, "61851 states",
+                             "", 7),
+            "actual_applied_max_current": (
+                0x1, 0x4b6, 2, registerType.HOLDING, registerDataType.FLOAT32, float,
+                "Actual Applied Max Current for Socket", "A", 7),
+            "modbus_slave_max_current_valid_time": (
+                0x1, 0x4b8, 2, registerType.HOLDING, registerDataType.UINT32, int,
+                "Remaining time before fallback to safe current", "1s", 7),
+            "modbus_slave_max_current": (
+                0x1, 0x4ba, 2, registerType.HOLDING, registerDataType.FLOAT32, float,
+                "Modbus Slave Max Current", "A", 7),
+            "active_load_balancing_safe_current": (
+                0x1, 0x4bc, 2, registerType.HOLDING, registerDataType.FLOAT32, float,
+                "Active Load Balancing Safe Current", "A", 7),
+            "modbus_slave_received_setpoint_accounted_for": (
+                0x1, 0x4be, 1, registerType.HOLDING, registerDataType.UINT16, int,
+                "Modbus Slave Received Setpoint Accounted For", "", 7),
+            "charge_using_1_or_3_phases": (
+                0x1, 0x4bf, 1, registerType.HOLDING, registerDataType.UINT16, int,
+                "Phases used for charging", "phases", 7)
+
         }
 
-    #     self.meter_dids = [
-    #         (0x9cfc, 1, registerType.HOLDING, registerDataType.UINT16, int, "", "", 1),
-    #         (0x9daa, 1, registerType.HOLDING, registerDataType.UINT16, int, "", "", 1),
-    #         (0x9e59, 1, registerType.HOLDING, registerDataType.UINT16, int, "", "", 1)
-    #     ]
-    #
-    #     self.battery_dids = [
-    #         (0xe140, 1, registerType.HOLDING, registerDataType.UINT16, int, "", "", 1),
-    #         (0xe240, 1, registerType.HOLDING, registerDataType.UINT16, int, "", "", 1)
-    #     ]
-    #
-    # def meters(self):
-    #     meters = [self._read(v) for v in self.meter_dids]
-    #
-    #     return {f"Meter{idx + 1}": Meter(offset=idx, parent=self) for idx, v in enumerate(meters) if v}
-    #
-    # def batteries(self):
-    #     batteries = [self._read(v) for v in self.battery_dids]
-    #
-    #     return {f"Battery{idx + 1}": Battery(offset=idx, parent=self) for idx, v in enumerate(batteries) if v != 255}
-
-
-# class Meter(SolarEdge):
-#
-#     def __init__(self, offset=False, *args, **kwargs):
-#         self.model = f"Meter{offset + 1}"
-#         self.wordorder = Endian.Big
-#
-#         super().__init__(*args, **kwargs)
-#
-#         self.offset = METER_REGISTER_OFFSETS[offset]
-#         self.registers = {
-#             "c_manufacturer": (0x9cbb + self.offset, 16, registerType.HOLDING, registerDataType.STRING, str, "Manufacturer", "", 1),
-#             "c_model": (0x9ccb + self.offset, 16, registerType.HOLDING, registerDataType.STRING, str, "Model", "", 1),
-#             "c_option": (0x9cdb + self.offset, 8, registerType.HOLDING, registerDataType.STRING, str, "Mode", "", 1),
-#             "c_version": (0x9ce3 + self.offset, 8, registerType.HOLDING, registerDataType.STRING, str, "Version", "", 1),
-#             "c_serialnumber": (0x9ceb + self.offset, 16, registerType.HOLDING, registerDataType.STRING, str, "Serial", "", 1),
-#             "c_deviceaddress": (0x9cfb + self.offset, 1, registerType.HOLDING, registerDataType.UINT16, int, "Modbus ID", "", 1),
-#             "c_sunspec_did": (0x9cfc + self.offset, 1, registerType.HOLDING, registerDataType.UINT16, int, "SunSpec DID", C_SUNSPEC_DID_MAP, 2),
-#             "c_sunspec_length": (0x9cfd + self.offset, 1, registerType.HOLDING, registerDataType.UINT16, int, "SunSpec Length", "16Bit Words", 2),
-#
-#             "current": (0x9cfe + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "Current", "A", 2),
-#             "l1_current": (0x9cff + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L1 Current", "A", 2),
-#             "l2_current": (0x9d00 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L2 Current", "A", 2),
-#             "l3_current": (0x9d01 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L3 Current", "A", 2),
-#             "current_scale": (0x9d02 + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Current Scale Factor", "", 2),
-#
-#             "voltage_ln": (0x9d03 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L-N Voltage", "V", 2),
-#             "l1n_voltage": (0x9d04 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L1-N Voltage", "V", 2),
-#             "l2n_voltage": (0x9d05 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L2-N Voltage", "V", 2),
-#             "l3n_voltage": (0x9d06 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L3-N Voltage", "V", 2),
-#             "voltage_ll": (0x9d07 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L-L Voltage", "V", 2),
-#             "l12_voltage": (0x9d08 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L1-l2 Voltage", "V", 2),
-#             "l23_voltage": (0x9d09 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L2-l3 Voltage", "V", 2),
-#             "l31_voltage": (0x9d0a + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L3-l1 Voltage", "V", 2),
-#             "voltage_scale": (0x9d0b + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Voltage Scale Factor", "", 2),
-#
-#             "frequency": (0x9d0c + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "Frequency", "Hz", 2),
-#             "frequency_scale": (0x9d0d + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Frequency Scale Factor", "", 2),
-#
-#             "power": (0x9d0e + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "Power", "W", 2),
-#             "l1_power": (0x9d0f + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L1 Power", "W", 2),
-#             "l2_power": (0x9d10 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L2 Power", "W", 2),
-#             "l3_power": (0x9d11 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L3 Power", "W", 2),
-#             "power_scale": (0x9d12 + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power Scale Factor", "", 2),
-#
-#             "power_apparent": (0x9d13 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "Power (Apparent)", "VA", 2),
-#             "l1_power_apparent": (0x9d14 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L1 Power (Apparent)", "VA", 2),
-#             "l2_power_apparent": (0x9d15 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L2 Power (Apparent)", "VA", 2),
-#             "l3_power_apparent": (0x9d16 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L3 Power (Apparent)", "VA", 2),
-#             "power_apparent_scale": (0x9d17 + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power (Apparent) Scale Factor", "", 2),
-#
-#             "power_reactive": (0x9d18 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "Power (Reactive)", "VAr", 2),
-#             "l1_power_reactive": (0x9d19 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L1 Power (Reactive)", "VAr", 2),
-#             "l2_power_reactive": (0x9d1a + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L2 Power (Reactive)", "VAr", 2),
-#             "l3_power_reactive": (0x9d1b + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L3 Power (Reactive)", "VAr", 2),
-#             "power_reactive_scale": (0x9d1c + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power (Reactive) Scale Factor", "", 2),
-#
-#             "power_factor": (0x9d1d + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "Power Factor", "", 2),
-#             "l1_power_factor": (0x9d1e + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L1 Power Factor", "", 2),
-#             "l2_power_factor": (0x9d1f + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L2 Power Factor", "", 2),
-#             "l3_power_factor": (0x9d20 + self.offset, 1, registerType.HOLDING, registerDataType.INT16, int, "L3 Power Factor", "", 2),
-#             "power_factor_scale": (0x9d21 + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Power Factor Scale Factor", "", 2),
-#
-#             "export_energy_active": (0x9d22 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Exported Energy (Active)", "Wh", 2),
-#             "l1_export_energy_active": (0x9d24 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Exported Energy (Active)", "Wh", 2),
-#             "l2_export_energy_active": (0x9d26 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Exported Energy (Active)", "Wh", 2),
-#             "l3_export_energy_active": (0x9d28 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Exported Energy (Active)", "Wh", 2),
-#             "import_energy_active": (0x9d2a + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Imported Energy (Active)", "Wh", 2),
-#             "l1_import_energy_active": (0x9d2c + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Imported Energy (Active)", "Wh", 2),
-#             "l2_import_energy_active": (0x9d2e + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Imported Energy (Active)", "Wh", 2),
-#             "l3_import_energy_active": (0x9d30 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Imported Energy (Active)", "Wh", 2),
-#             "energy_active_scale": (0x9d32 + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Energy (Active) Scale Factor", "", 2),
-#
-#             "export_energy_apparent": (0x9d33 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Exported Energy (Apparent)", "VAh", 3),
-#             "l1_export_energy_apparent": (0x9d35 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Exported Energy (Apparent)", "VAh", 3),
-#             "l2_export_energy_apparent": (0x9d37 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Exported Energy (Apparent)", "VAh", 3),
-#             "l3_export_energy_apparent": (0x9d39 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Exported Energy (Apparent)", "VAh", 3),
-#             "import_energy_apparent": (0x9d3b + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Imported Energy (Apparent)", "VAh", 3),
-#             "l1_import_energy_apparent": (0x9d3d + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Imported Energy (Apparent)", "VAh", 3),
-#             "l2_import_energy_apparent": (0x9d3f + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Imported Energy (Apparent)", "VAh", 3),
-#             "l3_import_energy_apparent": (0x9d41 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Imported Energy (Apparent)", "VAh", 3),
-#             "energy_apparent_scale": (0x9d43 + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Energy (Apparent) Scale Factor", "", 3),
-#
-#             "import_energy_reactive_q1": (0x9d44 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Imported Energy (Reactive) Quadrant 1", "VArh", 3),
-#             "l1_import_energy_reactive_q1": (0x9d46 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Imported Energy (Reactive) Quadrant 1", "VArh", 3),
-#             "l2_import_energy_reactive_q1": (0x9d48 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Imported Energy (Reactive) Quadrant 1", "VArh", 3),
-#             "l3_import_energy_reactive_q1": (0x9d4a + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Imported Energy (Reactive) Quadrant 1", "VArh", 3),
-#             "import_energy_reactive_q2": (0x9d4c + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Imported Energy (Reactive) Quadrant 2", "VArh", 3),
-#             "l1_import_energy_reactive_q2": (0x9d4e + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Imported Energy (Reactive) Quadrant 2", "VArh", 3),
-#             "l2_import_energy_reactive_q2": (0x9d50 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Imported Energy (Reactive) Quadrant 2", "VArh", 3),
-#             "l3_import_energy_reactive_q2": (0x9d52 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Imported Energy (Reactive) Quadrant 2", "VArh", 3),
-#             "export_energy_reactive_q3": (0x9d54 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Exported Energy (Reactive) Quadrant 3", "VArh", 3),
-#             "l1_export_energy_reactive_q3": (0x9d56 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Exported Energy (Reactive) Quadrant 3", "VArh", 3),
-#             "l2_export_energy_reactive_q3": (0x9d58 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Exported Energy (Reactive) Quadrant 3", "VArh", 3),
-#             "l3_export_energy_reactive_q3": (0x9d5a + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Exported Energy (Reactive) Quadrant 3", "VArh", 3),
-#             "export_energy_reactive_q4": (0x9d5c + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Total Exported Energy (Reactive) Quadrant 4", "VArh", 3),
-#             "l1_export_energy_reactive_q4": (0x9d5e + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L1 Exported Energy (Reactive) Quadrant 4", "VArh", 3),
-#             "l2_export_energy_reactive_q4": (0x9d60 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L2 Exported Energy (Reactive) Quadrant 4", "VArh", 3),
-#             "l3_export_energy_reactive_q4": (0x9d62 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "L3 Exported Energy (Reactive) Quadrant 4", "VArh", 3),
-#             "energy_reactive_scale": (0x9d64 + self.offset, 1, registerType.HOLDING, registerDataType.SCALE, int, "Energy (Reactive) Scale Factor", "", 3)
-#         }
-#
-#
-# class Battery(SolarEdge):
-#
-#     def __init__(self, offset=False, *args, **kwargs):
-#         self.model = f"Battery{offset + 1}"
-#         self.wordorder = Endian.Little
-#
-#         super().__init__(*args, **kwargs)
-#
-#         self.offset = BATTERY_REGISTER_OFFSETS[offset]
-#         self.registers = {
-#             "c_manufacturer": (0xe100 + self.offset, 16, registerType.HOLDING, registerDataType.STRING, str, "Manufacturer", "", 1),
-#             "c_model": (0xe110 + self.offset, 16, registerType.HOLDING, registerDataType.STRING, str, "Model", "", 1),
-#             "c_version": (0xe120 + self.offset, 16, registerType.HOLDING, registerDataType.STRING, str, "Version", "", 1),
-#             "c_serialnumber": (0xe130 + self.offset, 16, registerType.HOLDING, registerDataType.STRING, str, "Serial", "", 1),
-#             "c_deviceaddress": (0xe140 + self.offset, 1, registerType.HOLDING, registerDataType.UINT16, int, "Modbus ID", "", 1),
-#             "c_sunspec_did": (0xe141 + self.offset, 1, registerType.HOLDING, registerDataType.UINT16, int, "SunSpec DID", "", 1),
-#
-#             "rated_energy": (0xe142 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Rated Energy", "Wh", 2),
-#             "maximum_charge_continuous_power": (0xe144 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Maximum Charge Continuous Power", "W", 2),
-#             "maximum_discharge_continuous_power": (0xe146 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Maximum Discharge Continuous Power", "W", 2),
-#             "maximum_charge_peak_power": (0xe148 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Maximum Charge Peak Power", "W", 2),
-#             "maximum_discharge_peak_power": (0xe14a + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Maximum Discharge Peak Power", "W", 2),
-#
-#             "average_temperature": (0xe16c + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Average Temperature", "°C", 2),
-#             "maximum_temperature": (0xe16e + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Maximum Temperature", "°C", 2),
-#
-#             "instantaneous_voltage": (0xe170 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Instantaneous Voltage", "V", 2),
-#             "instantaneous_current": (0xe172 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Instantaneous Current", "A", 2),
-#             "instantaneous_power": (0xe174 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Instantaneous Power", "W", 2),
-#
-#             "lifetime_export_energy_counter": (0xe176 + self.offset, 4, registerType.HOLDING, registerDataType.UINT64, int, "Total Exported Energy", "Wh", 2),
-#             "lifetime_import_energy_counter": (0xe17A + self.offset, 4, registerType.HOLDING, registerDataType.UINT64, int, "Total Imported Energy", "Wh", 2),
-#
-#             "maximum_energy": (0xe17e + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Maximum Energy", "Wh", 2),
-#             "available_energy": (0xe180 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "Available Energy", "Wh", 2),
-#
-#             "soh": (0xe182 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "State of Health (SOH)", "%", 2),
-#             "soe": (0xe184 + self.offset, 2, registerType.HOLDING, registerDataType.SEFLOAT, float, "State of Energy (SOE)", "%", 2),
-#
-#             "status": (0xe186 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Status", BATTERY_STATUS_MAP, 2),
-#             "status_internal": (0xe188 + self.offset, 2, registerType.HOLDING, registerDataType.UINT32, int, "Internal Status", BATTERY_STATUS_MAP, 2),
-#
-#             "event_log": (0xe18a + self.offset, 2, registerType.HOLDING, registerDataType.UINT16, int, "Event Log", "", 2),
-#             "event_log_internal": (0xe192 + self.offset, 2, registerType.HOLDING, registerDataType.UINT16, int, "Internal Event Log", "", 2),
-#         }
