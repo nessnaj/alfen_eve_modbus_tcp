@@ -1,0 +1,4 @@
+__pycache__/*
+.idea/*
+dist/*
+src/alfen_eve_modbus_tcp.egg-info/*
