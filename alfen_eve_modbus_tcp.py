@@ -42,6 +42,24 @@ METER_TYPE_MAP = {
     "4": "Other"
 }
 
+METER_STATE_MAP = {
+    "1": "Initialised",
+    "2": "Updated",
+    "3": "Initialised & Updated",
+    "4": "Warning",
+    "5": "Warning & Initialised",
+    "6": "Warning & Updated",
+    "7": "Warning, Initialised & Updated",
+    "8": "Error",
+    "9": "Error & Initialised",
+    "10": "Error & Updated",
+    "11": "Error, Initialised & Updated",
+    "12": "Error & Warning",
+    "13": "Error, Warning & Initialised",
+    "14": "Error, Warning & Updated",
+    "15": "Error, Warning, Initialised & Updated"
+}
+
 AVAILABILITY_MAP = {
     "0": "Inoperable",
     "1": "Operable"

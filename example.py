@@ -57,7 +57,7 @@ if __name__ == "__main__":
         print(f"\tActual Applied Max Current for Socket: {values['actual_applied_max_current']}")
         print(f"\tRemaining time before fallback to safe current: {values['modbus_slave_max_current_valid_time']}")
 
-        print(f"\tMeter State: {values['meter_state']}")
+        print(f"\tMeter State: {alfen_eve_modbus_tcp.METER_STATE_MAP[str(values['meter_state'])]}")
         print(f"\tMeter Last Value Timestamp: {values['meter_last_value_timestamp']}")
         print(f"\tMeter Type: {alfen_eve_modbus_tcp.METER_TYPE_MAP[str(values['meter_type'])]}")
 
