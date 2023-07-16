@@ -144,23 +144,3 @@ if __name__ == "__main__":
         #print(car_charger.read("c_manufacturer"))
         #print(car_charger.read_all())
         #print(car_charger.registers["modbus_slave_max_current"])
-
-        car_charger.pause_charging()  # Set current to 5A
-
-        car_charger.switch_phase(1)  # Switch to using 1 phase charging
-
-        time.sleep(2)
-
-        car_charger.switch_phase(3)  # Switch to using 3 phases charging
-
-        for i in [300, 1000, 2000, 3000, 4000, 5000, 6000]:
-            phases, current = car_charger.get_solar_charge_profile(i)
-            print(f"With surplus power {i} selected solar profile: phase(s): {phases} and current: {current}")
-
-        power = 3188
-        phases, current = car_charger.get_solar_charge_profile(power)
-        print(f"With surplus power {power} selected solar profile: phase(s): {phases} and current: {current}")
-        car_charger.set_charge_profile(phases, current)
-
-        car_charger.monitor_and_refresh(1850)
-
