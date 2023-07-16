@@ -10,13 +10,11 @@ from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadBuilder
 from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.client import ModbusTcpClient
-from pymodbus.client import ModbusSerialClient
 from pymodbus.register_read_message import ReadHoldingRegistersResponse
 
 
 RETRIES = 3
 TIMEOUT = 1
-UNIT = 200
 
 class registerType(enum.Enum):
     INPUT = 1
@@ -66,20 +64,25 @@ AVAILABILITY_MAP = {
 }
 
 MODE_3_STATE_MAP = {
-    "A": "Available, Car not connected",
-    "B1": "Available, Car connected, Not Charging",
-    "B2": "Available, Car connected, Not Charging",
-    "C1": "Available, Car connected, Not Charging",
-    "C2": "Car Charging",
-    "D1": "Available, Car connected, Not Charging",
-    "D2": "Car Charging",
-    "E": "Available, Car not connected",
+    "A": "NotConnected",
+    "B1": "Connected",
+    "B2": "Connected",
+    "C1": "Connected",
+    "C2": "Charging",
+    "D1": "Connected",
+    "D2": "Charging",
+    "E": "NotConnected",
     "F": "Error"
 }
 
 SETPOINT_MAP = {
     "0": "No",
     "1": "Yes"
+}
+
+MODBUS_SLAVE_MAX_CURRENT_ENABLE_MAP = {
+    "0": "Disabled",
+    "1": "Enabled"
 }
 
 class AlfenEve:
@@ -453,7 +456,125 @@ class CarCharger(AlfenEve):
                 "Modbus Slave Received Setpoint Accounted For", "", 7),
             "charge_using_1_or_3_phases": (
                 0x1, 0x4bf, 1, registerType.HOLDING, registerDataType.UINT16, int,
-                "Phases used for charging", "phases", 7)
+                "Phases used for charging", "phases", 7),
+
+            "scn_name": (0xc8, 0x578, 4, registerType.HOLDING, registerDataType.STRING, str, "", "", 8),
+            "scn_sockets": (0xc8, 0x57c, 1, registerType.HOLDING, registerDataType.UINT16, int, "", "1A", 8),
+            "scn_total_consumption_phase_l1": (0xc8, 0x57d, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_total_consumption_phase_l2": (0xc8, 0x57f, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_total_consumption_phase_l3": (0xc8, 0x581, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_actual_max_current_phase_l1": (0xc8, 0x583, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_actual_max_current_phase_l2": (0xc8, 0x585, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_actual_max_current_phase_l3": (0xc8, 0x587, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_max_current_phase_l1": (0xc8, 0x589, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_max_current_phase_l2": (0xc8, 0x58b, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "scn_max_current_phase_l3": (0xc8, 0x58d, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
+            "remaining_valid_time_max_current_phase_l1": (0xc8, 0x58f, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 8),
+            "remaining_valid_time_max_current_phase_l2": (0xc8, 0x591, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 8),
+            "remaining_valid_time_max_current_phase_l3": (0xc8, 0x593, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 8),
+            "scn_safe_current": (0xc8, 0x595, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Configured SCN safe current", "1A", 8),
+            "scn_modbus_slave_max_current_enable": (0xc8, 0x597, 1, registerType.HOLDING, registerDataType.UINT16, int, "1: Enabled; 0: Disabled", "1A",
+            8)
 
         }
 
+    def pause_charging(self):
+        PAUSE_CURRENT = 5
+        print(f"Stop Charging...")
+        value = self.read('modbus_slave_max_current')
+        current = value['modbus_slave_max_current']
+        print(f"\tCurrent usage in A: {current}")
+        if current > 5.5:
+            print(f"\tSwitching...")
+            self.write('modbus_slave_max_current', PAUSE_CURRENT)
+            print(f"\tSwitched...")
+            for i in range(1,10):
+                if i==50:
+                    print(f"\tRefreshing...")
+                    self.write('modbus_slave_max_current', PAUSE_CURRENT)
+                    print(f"\tRefreshed...")
+                value = self.read('modbus_slave_max_current')
+                current = value['modbus_slave_max_current']
+                print(f"\t{i}: Current usage in A: {current}")
+                time.sleep(1)
+        else:
+            print(f"\tAlready paused charging...")
+
+    def switch_phase(self, phases):
+        if (phases == 1 or phases == 3):
+            current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            if current_phases == phases:
+                print(f"No need to switch, already at {phases} phase...")
+            else:
+                print(f"Switch to {phases} phase(s)...")
+                print(f"\tCurrent phase(s): {current_phases}")
+                self.write('charge_using_1_or_3_phases', phases)
+                print(f"\tSwitched...")
+                current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+                print(f"\tCurrent phase(s): {current_phases}")
+        else:
+            print(f"\tInvalid # of phases: {phases}...")
+
+    def get_solar_charge_profile(self, surplus_power):
+        phases=self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+        current = self.read('modbus_slave_max_current')['modbus_slave_max_current']
+        mode_3_state = self.read('mode_3_state')
+        status = MODE_3_STATE_MAP[mode_3_state['mode_3_state']]
+        calculated_surplus_power = surplus_power
+        if status == "Charging":
+            calculated_surplus_power += phases*current
+
+        # If surplus power stays below certain value, return corresponding tuple of (phases, current)
+        if calculated_surplus_power < 900: return (1,5)
+        elif calculated_surplus_power < 1500: return (1,6)
+        elif calculated_surplus_power < 1800: return (1,7)
+        elif calculated_surplus_power < 2000: return (1,8)
+        elif calculated_surplus_power < 2200: return (1,9)
+        elif calculated_surplus_power < 2500: return (1,10)
+        elif calculated_surplus_power < 2700: return (1,11)
+        elif calculated_surplus_power < 2900: return (1,12)
+        elif calculated_surplus_power < 3200: return (1,13)
+        elif calculated_surplus_power < 3400: return (1,14)
+        elif calculated_surplus_power < 3600: return (1,15)
+        elif calculated_surplus_power < 3800: return (1,16)
+        elif calculated_surplus_power < 4500: return (3,6)
+        elif calculated_surplus_power < 5200: return (3,7)
+        elif calculated_surplus_power < 5900: return (3,8)
+        elif calculated_surplus_power < 6600: return (3,9)
+        # Following situations will never occur for me
+        elif calculated_surplus_power < 7300: return (3,10)
+        elif calculated_surplus_power < 8000: return (3,11)
+        elif calculated_surplus_power < 8700: return (3,12)
+        elif calculated_surplus_power < 9400: return (3,13)
+        elif calculated_surplus_power < 10100: return (3,14)
+        elif calculated_surplus_power < 10700: return (3,15)
+        elif calculated_surplus_power < 11100: return (3,16)
+
+    def set_charge_profile(self, phases, current):
+        mode_3_state = self.read('mode_3_state')
+        status = MODE_3_STATE_MAP[mode_3_state['mode_3_state']]
+        if (status == "Charging" or status == "Connected"):
+            current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            if current_phases != phases:
+                if status == "Charging":
+                    self.pause_charging()
+                    time.sleep(1)
+                self.switch_phase(phases)
+            self.write('modbus_slave_max_current', current)
+            time.sleep(1)
+            phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            current = self.read('modbus_slave_max_current')['modbus_slave_max_current']
+            print(f"\tCharge Profile Set: Phase(s): {phases}; Current: {current} A.")
+        else:
+            print(f"\tCar is not connected: {status}, so no changes in charge profile applied.")
+
+    def monitor_and_refresh(self, surplus_power):
+        while True:
+            mode_3_state = self.read('mode_3_state')
+            status = MODE_3_STATE_MAP[mode_3_state['mode_3_state']]
+            current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            current_current = self.read('modbus_slave_max_current')['modbus_slave_max_current']
+            print(f"\tPhase(s): {current_phases}, Current: {current_current}, Status: {status}")
+            phases, current = self.get_solar_charge_profile(surplus_power)
+            self.set_charge_profile(phases, current)
+            time.sleep(3)

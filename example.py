@@ -6,6 +6,7 @@
 
 import argparse
 import json
+import time
 
 import alfen_eve_modbus_tcp
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         print(f"\tNr of sockets: {values['nr_of_sockets']}")
 
         print(f"\tAvailability: {alfen_eve_modbus_tcp.AVAILABILITY_MAP[str(values['availability'])]}")
-        print(f"\tMode 3 state: {alfen_eve_modbus_tcp.MODE_3_STATE_MAP[values['mode_3_state']]}")
+        print(f"\tMode 3 state: {alfen_eve_modbus_tcp.MODE_3_STATE_MAP[values['mode_3_state']]}, {values['mode_3_state']}")
         print(f"\tActual Applied Max Current for Socket: {values['actual_applied_max_current']}")
         print(f"\tRemaining time before fallback to safe current: {values['modbus_slave_max_current_valid_time']}")
 
@@ -120,31 +121,46 @@ if __name__ == "__main__":
         print(f"\tModbus Slave Received Setpoint Accounted For: {alfen_eve_modbus_tcp.SETPOINT_MAP[str(values['modbus_slave_received_setpoint_accounted_for'])]}")
         print(f"\tPhases used for charging: {values['charge_using_1_or_3_phases']}")
 
-        # print(f"\tStatus: {solaredge_modbus.INVERTER_STATUS_MAP[values['status']]}")
-        # print(f"\tTemperature: {(values['temperature'] * (10 ** values['temperature_scale'])):.2f}{inverter.registers['temperature'][6]}")
-        #
-        # print(f"\tCurrent: {(values['current'] * (10 ** values['current_scale'])):.2f}{inverter.registers['current'][6]}")
-        #
-        # if values['c_sunspec_did'] is solaredge_modbus.sunspecDID.THREE_PHASE_INVERTER.value:
-        #     print(f"\tPhase 1 Current: {(values['l1_current'] * (10 ** values['current_scale'])):.2f}{inverter.registers['l1_current'][6]}")
-        #     print(f"\tPhase 2 Current: {(values['l2_current'] * (10 ** values['current_scale'])):.2f}{inverter.registers['l2_current'][6]}")
-        #     print(f"\tPhase 3 Current: {(values['l3_current'] * (10 ** values['current_scale'])):.2f}{inverter.registers['l3_current'][6]}")
-        #     print(f"\tPhase 1 voltage: {(values['l1_voltage'] * (10 ** values['voltage_scale'])):.2f}{inverter.registers['l1_voltage'][6]}")
-        #     print(f"\tPhase 2 voltage: {(values['l2_voltage'] * (10 ** values['voltage_scale'])):.2f}{inverter.registers['l2_voltage'][6]}")
-        #     print(f"\tPhase 3 voltage: {(values['l3_voltage'] * (10 ** values['voltage_scale'])):.2f}{inverter.registers['l3_voltage'][6]}")
-        #     print(f"\tPhase 1-N voltage: {(values['l1n_voltage'] * (10 ** values['voltage_scale'])):.2f}{inverter.registers['l1n_voltage'][6]}")
-        #     print(f"\tPhase 2-N voltage: {(values['l2n_voltage'] * (10 ** values['voltage_scale'])):.2f}{inverter.registers['l2n_voltage'][6]}")
-        #     print(f"\tPhase 3-N voltage: {(values['l3n_voltage'] * (10 ** values['voltage_scale'])):.2f}{inverter.registers['l3n_voltage'][6]}")
-        # else:
-        #     print(f"\tVoltage: {(values['l1_voltage'] * (10 ** values['voltage_scale'])):.2f}{inverter.registers['l1_voltage'][6]}")
-        #
-        # print(f"\tFrequency: {(values['frequency'] * (10 ** values['frequency_scale'])):.2f}{inverter.registers['frequency'][6]}")
-        # print(f"\tPower: {(values['power_ac'] * (10 ** values['power_ac_scale'])):.2f}{inverter.registers['power_ac'][6]}")
-        # print(f"\tPower (Apparent): {(values['power_apparent'] * (10 ** values['power_apparent_scale'])):.2f}{inverter.registers['power_apparent'][6]}")
-        # print(f"\tPower (Reactive): {(values['power_reactive'] * (10 ** values['power_reactive_scale'])):.2f}{inverter.registers['power_reactive'][6]}")
-        # print(f"\tPower Factor: {(values['power_factor'] * (10 ** values['power_factor_scale'])):.2f}{inverter.registers['power_factor'][6]}")
-        # print(f"\tTotal Energy: {(values['energy_total'] * (10 ** values['energy_total_scale']))}{inverter.registers['energy_total'][6]}")
-        #
-        # print(f"\tDC Current: {(values['current_dc'] * (10 ** values['current_dc_scale'])):.2f}{inverter.registers['current_dc'][6]}")
-        # print(f"\tDC Voltage: {(values['voltage_dc'] * (10 ** values['voltage_dc_scale'])):.2f}{inverter.registers['voltage_dc'][6]}")
-        # print(f"\tDC Power: {(values['power_dc'] * (10 ** values['power_dc_scale'])):.2f}{inverter.registers['power_dc'][6]}")
+        print(f"\tSCN Name: {values['scn_name']}")
+        print(f"\tSCN Sockets: {values['scn_sockets']}")
+        print(f"\tSCN Total Consumption Phase L1: {values['scn_total_consumption_phase_l1']}")
+        print(f"\tSCN Total Consumption Phase L2: {values['scn_total_consumption_phase_l2']}")
+        print(f"\tSCN Total Consumption Phase L3: {values['scn_total_consumption_phase_l3']}")
+        print(f"\tSCN Actual Max Current Phase L1: {values['scn_actual_max_current_phase_l1']}")
+        print(f"\tSCN Actual Max Current Phase L2: {values['scn_actual_max_current_phase_l2']}")
+        print(f"\tSCN Actual Max Current Phase L3: {values['scn_actual_max_current_phase_l3']}")
+        print(f"\tSCN Max Current Phase L1: {values['scn_max_current_phase_l1']}")
+        print(f"\tSCN Max Current Phase L2: {values['scn_max_current_phase_l2']}")
+        print(f"\tSCN Max Current Phase L3: {values['scn_max_current_phase_l3']}")
+        print(f"\tMax current valid time L1: {values['remaining_valid_time_max_current_phase_l1']}")
+        print(f"\tMax current valid time L2: {values['remaining_valid_time_max_current_phase_l2']}")
+        print(f"\tMax current valid time L3: {values['remaining_valid_time_max_current_phase_l3']}")
+        print(f"\tSCN safe current: {values['scn_safe_current']}")
+        print(f"\tSCN Modbus Slave Max Current enable: {alfen_eve_modbus_tcp.MODBUS_SLAVE_MAX_CURRENT_ENABLE_MAP[str(values['scn_modbus_slave_max_current_enable'])]}")
+
+        #print(car_charger.connect())
+        #print(car_charger.connected())
+        #print(car_charger)
+        #print(car_charger.read("c_manufacturer"))
+        #print(car_charger.read_all())
+        #print(car_charger.registers["modbus_slave_max_current"])
+
+        car_charger.pause_charging()  # Set current to 5A
+
+        car_charger.switch_phase(1)  # Switch to using 1 phase charging
+
+        time.sleep(2)
+
+        car_charger.switch_phase(3)  # Switch to using 3 phases charging
+
+        for i in [300, 1000, 2000, 3000, 4000, 5000, 6000]:
+            phases, current = car_charger.get_solar_charge_profile(i)
+            print(f"With surplus power {i} selected solar profile: phase(s): {phases} and current: {current}")
+
+        power = 3188
+        phases, current = car_charger.get_solar_charge_profile(power)
+        print(f"With surplus power {power} selected solar profile: phase(s): {phases} and current: {current}")
+        car_charger.set_charge_profile(phases, current)
+
+        car_charger.monitor_and_refresh(1850)
+

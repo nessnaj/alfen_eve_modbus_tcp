@@ -1,4 +1,4 @@
-# solaredge_modbus
+# alfen_eve_modbus_tcp
 
 alfen_eve_modbus_tcp is a python library that collects data from Alfen Eve Car Chargers over Modbus TCP.
 
@@ -17,7 +17,7 @@ or install the package from PyPi:
 The script `example.py` provides a minimal example of connecting to and displaying all registers from an Alfen Eve Car Charger over Modbus TCP.
 
 ```
-usage: example.py [-h] [--timeout TIMEOUT] [--unit UNIT] [--json] host port
+usage: example.py [-h] [--timeout TIMEOUT] [--json] host port
 
 positional arguments:
   host               Modbus TCP address
@@ -26,138 +26,201 @@ positional arguments:
 optional arguments:
   -h, --help         show this help message and exit
   --timeout TIMEOUT  Connection timeout
-  --unit UNIT        Modbus device address
   --json             Output as JSON
 ```
 
 Output:
 
 ```
-Inverter(10.0.0.123:1502, connectionType.TCP: timeout=1, retries=3, unit=0x1):
+Car Charger(192.168.2.136:502: timeout=1, retries=3):
 
 Registers:
-    Manufacturer: SolarEdge
-    Model: SE3500H-RW000BNN4
-    Type: Single Phase Inverter
-    Version: 0004.0009.0030
-    Serial: 123ABC12
-    Status: Producing
-    Temperature: 49.79°C
-    Current: 8.93A
-    Voltage: 240.20V
-    Frequency: 50.00Hz
-    Power: 2141.80W
-    Power (Apparent): 2149.60VA
-    Power (Reactive): 183.20VAr
-    Power Factor: 99.69%
-    Total Energy: 3466757Wh
-    DC Current: 5.68A
-    DC Voltage: 382.50V
-    DC Power: 2173.50W
+	Name: DIE_14966
+	Manufacturer: Alfen NV
+	Modbus Table Version: 1
+	Firmware Version: 6.1.0-4159
+	Station Serial Number: ACE0287582
+	Date Year: 2023
+	Date Month: 7
+	Date day: 15
+	Time hour: 21
+	Time minute: 3
+	Time second: 39
+	Uptime: 125689398
+	Time zone: 60
+	Station Active Maximum Current: 25
+	Temperature: 35.9375
+	OCPP state: 1
+	Nr of sockets: 1
+	Availability: Operable
+	Mode 3 state: NotConnected, A
+	Actual Applied Max Current for Socket: 6.0
+	Remaining time before fallback to safe current: 0
+	Meter State: Initialised & Updated
+	Meter Last Value Timestamp: 334
+	Meter Type: RTU
+	Voltage Phase L1N: 238.1899871826172
+	Voltage Phase L2N: 240.63999938964844
+	Voltage Phase L3N: 238.4399871826172
+	Voltage Phase L1L2: nan
+	Voltage Phase L2L3: nan
+	Voltage Phase L3L1: nan
+	Current N: nan
+	Current Phase L1: 0.0
+	Current Phase L2: 0.0
+	Current Phase L3: 0.0
+	Current Sum: nan
+	Power Factor Phase L1: nan
+	Power Factor Phase L2: nan
+	Power Factor Phase L3: nan
+	Power Factor Sum: 0.0
+	Frequency: 50.000003814697266
+	Real Power Phase L1: nan
+	Real Power Phase L2: nan
+	Real Power Phase L3: nan
+	Real Power Sum: 0.0
+	Apparent Power Phase L1: nan
+	Apparent Power Phase L2: nan
+	Apparent Power Phase L3: nan
+	Apparent Power Sum: nan
+	Reactive Power Phase L1: nan
+	Reactive Power Phase L2: nan
+	Reactive Power Phase L3: nan
+	Reactive Power Sum: nan
+	Real Energy Delivered Phase L1: nan
+	Real Energy Delivered Phase L2: nan
+	Real Energy Delivered Phase L3: nan
+	Real Energy Delivered Sum: 31.0
+	Real Energy Consumed Phase L1: nan
+	Real Energy Consumed Phase L2: nan
+	Real Energy Consumed Phase L3: nan
+	Real Energy Consumed Sum: nan
+	Apparent Energy Phase L1: nan
+	Apparent Energy Phase L2: nan
+	Apparent Energy Phase L3: nan
+	Apparent Energy Sum: nan
+	Reactive Energy Phase L1: nan
+	Reactive Energy Phase L2: nan
+	Reactive Energy Phase L3: nan
+	Reactive Energy Sum: nan
+	Modbus Slave Max Current: 6.0
+	Active Load Balancing Safe Current: 6.0
+	Modbus Slave Received Setpoint Accounted For: Yes
+	Phases used for charging: 3
+	SCN Name: 
+	SCN Sockets: 0
+	SCN Total Consumption Phase L1: 0.0
+	SCN Total Consumption Phase L2: 0.0
+	SCN Total Consumption Phase L3: 0.0
+	SCN Actual Max Current Phase L1: 0.0
+	SCN Actual Max Current Phase L2: 0.0
+	SCN Actual Max Current Phase L3: 0.0
+	SCN Max Current Phase L1: 6.0
+	SCN Max Current Phase L2: 6.0
+	SCN Max Current Phase L3: 6.0
+	Max current valid time L1: 0
+	Max current valid time L2: 0
+	Max current valid time L3: 0
+	SCN safe current: 6.0
+	SCN Modbus Slave Max Current enable: Disabled
 ```
 
 Passing `--json` returns:
 
 ```
 {
-    "c_manufacturer": "SolarEdge",
-    'c_model': 'SE3500H-RW000BNN4',
-    'c_version': '0004.0009.0030',
-    'c_serialnumber': '123ABC12',
-    'c_deviceaddress': 1,
-    'c_sunspec_did': 101,
-    'current': 895,
-    'l1_current': 895,
-    'l2_current': False,
-    'l3_current': False,
-    'current_scale': -2,
-    'l1_voltage': 2403,
-    'l2_voltage': False,
-    'l3_voltage': False,
-    'l1n_voltage': False,
-    'l2n_voltage': False,
-    'l3n_voltage': False,
-    'voltage_scale': -1,
-    'frequency': 50003,
-    'frequency_scale': -3,
-    'power_ac': 21413,
-    'power_ac_scale': -1, 
-    'power_apparent': 21479,
-    'power_apparent_scale': -1,
-    'power_reactive': 16859,
-    'power_reactive_scale': -2,
-    'power_factor': 9969,
-    'power_factor_scale': -2,
-    'energy_total': 3466757,
-    'energy_total_scale': 0,
-    'current_dc': 5678,
-    'current_dc_scale': -3,
-    'voltage_dc': 3826,
-    'voltage_dc_scale': -1,
-    'power_dc': 21726,
-    'power_dc_scale': -1,
-    'temperature': 4979,
-    'temperature_scale': -2,
-    'status': 4,
-    'vendor_status': 0
+    "c_name": "DIE_14966",
+    "c_manufacturer": "Alfen NV",
+    "c_modbus_table_version": 1,
+    "c_firmware_version": "6.1.0-4159",
+    "c_platform_type": "NG910",
+    "c_station_serial_number": "ACE0287582",
+    "c_date_year": 2023,
+    "c_date_month": 7,
+    "c_date_day": 15,
+    "c_time_hour": 21,
+    "c_time_minute": 10,
+    "c_time_second": 48,
+    "c_uptime": 126118547,
+    "c_time_zone": 60,
+    "station_active_max_current": 25,
+    "temperature": 35.8125,
+    "ocpp_state": 1,
+    "nr_of_sockets": 1,
+    "meter_state": 3,
+    "meter_last_value_timestamp": 29,
+    "meter_type": 0,
+    "voltage_phase_L1N": 237.8199920654297,
+    "voltage_phase_L2N": 240.75999450683594,
+    "voltage_phase_L3N": 238.80999755859375,
+    "voltage_phase_L1L2": NaN,
+    "voltage_phase_L2L3": NaN,
+    "voltage_phase_L3L1": NaN,
+    "current_N": NaN,
+    "current_phase_L1": 0.0,
+    "current_phase_L2": 0.0,
+    "current_phase_L3": 0.0,
+    "current_sum": NaN,
+    "power_factor_phase_L1": NaN,
+    "power_factor_phase_L2": NaN,
+    "power_factor_phase_L3": NaN,
+    "power_factor_sum": 0.0,
+    "frequency": 50.02000427246094,
+    "real_power_phase_L1": NaN,
+    "real_power_phase_L2": NaN,
+    "real_power_phase_L3": NaN,
+    "real_power_sum": 0.0,
+    "apparent_power_phase_L1": NaN,
+    "apparent_power_phase_L2": NaN,
+    "apparent_power_phase_L3": NaN,
+    "apparent_power_sum": NaN,
+    "reactive_power_phase_L1": NaN,
+    "reactive_power_phase_L2": NaN,
+    "reactive_power_phase_L3": NaN,
+    "reactive_power_sum": NaN,
+    "real_energy_delivered_phase_L1": NaN,
+    "real_energy_delivered_phase_L2": NaN,
+    "real_energy_delivered_phase_L3": NaN,
+    "real_energy_delivered_sum": 31.0,
+    "real_energy_consumed_phase_L1": NaN,
+    "real_energy_consumed_phase_L2": NaN,
+    "real_energy_consumed_phase_L3": NaN,
+    "real_energy_consumed_sum": NaN,
+    "apparent_energy_phase_L1": NaN,
+    "apparent_energy_phase_L2": NaN,
+    "apparent_energy_phase_L3": NaN,
+    "apparent_energy_sum": NaN,
+    "reactive_energy_phase_L1": NaN,
+    "reactive_energy_phase_L2": NaN,
+    "reactive_energy_phase_L3": NaN,
+    "reactive_energy_sum": NaN,
+    "availability": 1,
+    "mode_3_state": "A",
+    "actual_applied_max_current": 6.0,
+    "modbus_slave_max_current_valid_time": 0,
+    "modbus_slave_max_current": 6.0,
+    "active_load_balancing_safe_current": 6.0,
+    "modbus_slave_received_setpoint_accounted_for": 1,
+    "charge_using_1_or_3_phases": 3,
+    "scn_name": "",
+    "scn_sockets": 0,
+    "scn_total_consumption_phase_l1": 0.0,
+    "scn_total_consumption_phase_l2": 0.0,
+    "scn_total_consumption_phase_l3": 0.0,
+    "scn_actual_max_current_phase_l1": 0.0,
+    "scn_actual_max_current_phase_l2": 0.0,
+    "scn_actual_max_current_phase_l3": 0.0,
+    "scn_max_current_phase_l1": 6.0,
+    "scn_max_current_phase_l2": 6.0,
+    "scn_max_current_phase_l3": 6.0,
+    "remaining_valid_time_max_current_phase_l1": 0,
+    "remaining_valid_time_max_current_phase_l2": 0,
+    "remaining_valid_time_max_current_phase_l3": 0,
+    "scn_safe_current": 6.0,
+    "scn_modbus_slave_max_current_enable": 0
 }
 ```
 
-Note that if kWh meters or batteries are connected to your inverter, these will also be presented in the JSON output.
-
-A second script, `example_influxdb.py` provides an example InfluxDB v1 writer. It connects to an inverter over Modbus TCP, and writes inverter, battery and meter values to an InfluxDB every second.
-
-```
-usage: example_influxdb.py [-h] [--timeout TIMEOUT] [--unit UNIT] [--interval INTERVAL] [--influx_host INFLUX_HOST] [--influx_port INFLUX_PORT] [--influx_db INFLUX_DB]
-                           [--influx_user INFLUX_USER] [--influx_pass INFLUX_PASS]
-                           host port
-
-positional arguments:
-  host                  Modbus TCP address
-  port                  Modbus TCP port
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --timeout TIMEOUT     Connection timeout
-  --unit UNIT           Modbus device address
-  --interval INTERVAL   Update interval
-  --influx_host INFLUX_HOST
-                        InfluxDB host
-  --influx_port INFLUX_PORT
-                        InfluxDB port
-  --influx_db INFLUX_DB
-                        InfluxDB database
-  --influx_user INFLUX_USER
-                        InfluxDB username
-  --influx_pass INFLUX_PASS
-                        InfluxDB password
-```
-
-A third script, `example_influxdb_v2.py` provides a similar example InfluxDB v2 writer.
-
-```
-usage: example_influxdb_v2.py [-h] [--timeout TIMEOUT] [--unit UNIT] [--interval INTERVAL] [--influx_url INFLUX_URL]
-                              [--influx_org INFLUX_ORG] [--influx_bucket INFLUX_BUCKET] [--influx_token INFLUX_TOKEN]
-                              host port
-
-positional arguments:
-  host                  Modbus TCP address
-  port                  Modbus TCP port
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --timeout TIMEOUT     Connection timeout
-  --unit UNIT           Modbus device address
-  --interval INTERVAL   Update interval
-  --influx_url INFLUX_URL
-                        InfluxDB URL
-  --influx_org INFLUX_ORG
-                        InfluxDB organisation
-  --influx_bucket INFLUX_BUCKET
-                        InfluxDB bucket
-  --influx_token INFLUX_TOKEN
-                        InfluxDB token
-```
 
 ### Connecting
 
@@ -165,33 +228,23 @@ If you wish to use Modbus TCP the following parameters are relevant:
 
 `host = IP or DNS name of your Modbus TCP device, required`  
 `port = TCP port of the Modbus TCP device, required`  
-`unit = Modbus device address, default=1, optional`
 
-While if you are using a Modbus RTU connection you can specify:
-
-`device = path to serial device, e.g. /dev/ttyUSB0, required`  
-`baud = baud rate of your device, defaults to product default, optional`  
-`unit = Modbus device address, defaults to 1, optional`
-
-Connecting to the inverter:
+Connecting to the car charger:
 
 ```
-    >>> import solaredge_modbus
+    >>> import alfen_eve_modbus_tcp
 
-    # Inverter over Modbus TCP
-    >>> inverter = solaredge_modbus.Inverter(host="10.0.0.123", port=1502)
-    
-    # Inverter over Modbus RTU
-    >>> inverter = solaredge_modbus.Inverter(device="/dev/ttyUSB0", baud=115200)
+    # Car Charger over Modbus TCP
+    >>>  car_charger = alfen_eve_modbus_tcp.CarCharger(host="192.168.2.136", port=502)
 ```
 
 Test the connection, remember that only a single connection at a time is allowed:
 
 ```
-    >>> inverter.connect()
+    >>> car_charger.connect()
     True
 
-    >>> inverter.connected()
+    >>> car_charger.connected()
     True
 ```
 
@@ -200,8 +253,8 @@ While it is not necessary to explicitly call `connect()` before reading register
 Printing the class yields basic device parameters:
 
 ```
-    >>> inverter
-    Inverter(10.0.0.123:1502, connectionType.TCP: timeout=1, retries=3, unit=0x1)
+    >>> car_charger
+    Car Charger(192.168.2.136:502: timeout=1, retries=3)
 ```
 
 ### Reading Registers
@@ -209,57 +262,104 @@ Printing the class yields basic device parameters:
 Reading a single input register by name:
 
 ```
-    >>> inverter.read("current")
-    {
-        'current': 895
-    }
+    >>> car_charger.read("c_manufacturer")
+    {'c_manufacturer': 'Alfen NV'}
 ```
 
 Read all input registers using `read_all()`:
 
 ```
-    >>> inverter.read_all()
+    >>> car_charger.read_all()
     {
-        'c_manufacturer': 'SolarEdge',
-        'c_model': 'SE3500H-RW000BNN4',
-        'c_version': '0004.0009.0030',
-        'c_serialnumber': '123ABC12',
-        'c_deviceaddress': 1,
-        'c_sunspec_did': 101,
-        'current': 895,
-        'l1_current': 895,
-        'l2_current': False,
-        'l3_current': False,
-        'current_scale': -2,
-        'l1_voltage': 2403,
-        'l2_voltage': False,
-        'l3_voltage': False,
-        'l1n_voltage': False,
-        'l2n_voltage': False,
-        'l3n_voltage': False,
-        'voltage_scale': -1,
-        'power_ac': 21413,
-        'power_ac_scale': -1, 
-        'frequency': 50003,
-        'frequency_scale': -3,
-        'power_apparent': 21479,
-        'power_apparent_scale': -1,
-        'power_reactive': 16859,
-        'power_reactive_scale': -2,
-        'power_factor': 9969,
-        'power_factor_scale': -2,
-        'energy_total': 3466757,
-        'energy_total_scale': 0,
-        'current_dc': 5678,
-        'current_dc_scale': -3,
-        'voltage_dc': 3826,
-        'voltage_dc_scale': -1,
-        'power_dc': 21726,
-        'power_dc_scale': -1,
-        'temperature': 4979,
-        'temperature_scale': -2,
-        'status': 4,
-        'vendor_status': 0
+        'c_name': 'DIE_14966',
+        'c_manufacturer': 'Alfen NV',
+        'c_modbus_table_version': 1,
+        'c_firmware_version': '6.1.0-4159',
+        'c_platform_type': 'NG910',
+        'c_station_serial_number': 'ACE0287582',
+        'c_date_year': 2023,
+        'c_date_month': 7,
+        'c_date_day': 15,
+        'c_time_hour': 21,
+        'c_time_minute': 23,
+        'c_time_second': 45,
+        'c_uptime': 126895863,
+        'c_time_zone': 60,
+        'station_active_max_current': 25,
+        'temperature': 35.75,
+        'ocpp_state': 1,
+        'nr_of_sockets': 1,
+        'meter_state': 3,
+        'meter_last_value_timestamp': 602,
+        'meter_type': 0,
+        'voltage_phase_L1N': 239.1999969482422,
+        'voltage_phase_L2N': 241.25,
+        'voltage_phase_L3N': 238.6599884033203,
+        'voltage_phase_L1L2': nan,
+        'voltage_phase_L2L3': nan,
+        'voltage_phase_L3L1': nan,
+        'current_N': nan,
+        'current_phase_L1': 0.0,
+        'current_phase_L2': 0.0,
+        'current_phase_L3': 0.0,
+        'current_sum': nan,
+        'power_factor_phase_L1': nan,
+        'power_factor_phase_L2': nan,
+        'power_factor_phase_L3': nan,
+        'power_factor_sum': 0.0,
+        'frequency': 50.060001373291016,
+        'real_power_phase_L1': nan,
+        'real_power_phase_L2': nan,
+        'real_power_phase_L3': nan,
+        'real_power_sum': 0.0,
+        'apparent_power_phase_L1': nan,
+        'apparent_power_phase_L2': nan,
+        'apparent_power_phase_L3': nan,
+        'apparent_power_sum': nan,
+        'reactive_power_phase_L1': nan,
+        'reactive_power_phase_L2': nan,
+        'reactive_power_phase_L3': nan,
+        'reactive_power_sum': nan,
+        'real_energy_delivered_phase_L1': nan,
+        'real_energy_delivered_phase_L2': nan,
+        'real_energy_delivered_phase_L3': nan,
+        'real_energy_delivered_sum': 31.0,
+        'real_energy_consumed_phase_L1': nan,
+        'real_energy_consumed_phase_L2': nan,
+        'real_energy_consumed_phase_L3': nan,
+        'real_energy_consumed_sum': nan,
+        'apparent_energy_phase_L1': nan,
+        'apparent_energy_phase_L2': nan,
+        'apparent_energy_phase_L3': nan,
+        'apparent_energy_sum': nan,
+        'reactive_energy_phase_L1': nan,
+        'reactive_energy_phase_L2': nan,
+        'reactive_energy_phase_L3': nan,
+        'reactive_energy_sum': nan,
+        'availability': 1,
+        'mode_3_state': 'A',
+        'actual_applied_max_current': 6.0,
+        'modbus_slave_max_current_valid_time': 0,
+        'modbus_slave_max_current': 6.0,
+        'active_load_balancing_safe_current': 6.0,
+        'modbus_slave_received_setpoint_accounted_for': 1,
+        'charge_using_1_or_3_phases': 3,
+        'scn_name': '',
+        'scn_sockets': 0,
+        'scn_total_consumption_phase_l1': 0.0,
+        'scn_total_consumption_phase_l2': 0.0,
+        'scn_total_consumption_phase_l3': 0.0,
+        'scn_actual_max_current_phase_l1': 0.0,
+        'scn_actual_max_current_phase_l2': 0.0,
+        'scn_actual_max_current_phase_l3': 0.0,
+        'scn_max_current_phase_l1': 6.0,
+        'scn_max_current_phase_l2': 6.0,
+        'scn_max_current_phase_l3': 6.0,
+        'remaining_valid_time_max_current_phase_l1': 0,
+        'remaining_valid_time_max_current_phase_l2': 0,
+        'remaining_valid_time_max_current_phase_l3': 0,
+        'scn_safe_current': 6.0,
+        'scn_modbus_slave_max_current_enable': 0
     }
 ```
 
@@ -268,113 +368,20 @@ Read all input registers using `read_all()`:
 If you need more information about a particular register, to look up the units or enumerations, for example:
 
 ```
-    >>> inverter.registers["current"]
-        # address, length, type, datatype, valuetype, name, unit, batching
+    >>> car_charger.registers["modbus_slave_max_current"]
+        # unit, address, length, type, datatype, valuetype, name, unit, batching
         (
-            40071, 
-            1, 
-            <registerType.HOLDING: 2>, 
-            <registerDataType.UINT16: 3>, 
-            <class 'int'>, 
-            'Current', 
-            'A', 
-            2
-        )
-
-    >>> inverter.registers["status"]
-        # address, length, type, datatype, valuetype, name, unit, batching
-        (
-            40107, 
-            1, 
-            <registerType.HOLDING: 2>, 
-            <registerDataType.UINT16: 3>, 
-            <class 'int'>, 
-            'Status', 
-            ['Undefined', 'Off', 'Sleeping', 'Grid Monitoring', 'Producing', 'Producing (Throttled)', 'Shutting Down', 'Fault', 'Standby'], 
-            2
+            1,
+            1210,
+            2,
+            <registerType.HOLDING: 2>,
+            <registerDataType.FLOAT32: 6>,
+            <class 'float'>,
+            'Modbus Slave Max Current',
+            'A',
+            7
         )
 ```
-
-### Multiple Inverters
-
-If you have multiple inverters connected together over the RS485 bus, you can query the individual inverters using Modbus RTU or Modbus TCP by instantiating multiple inverter objects:
-
-```
-    # Master inverter over Modbus TCP
-    >>> master = solaredge_modbus.Inverter(host="10.0.0.123", port=1502, unit=1)
-
-    # Second inverter using master's connection
-    >>> second = solaredge_modbus.Inverter(parent=master, unit=2)
-
-    # Third inverter
-    >>> third = solaredge_modbus.Inverter(parent=master, unit=3)
-```
-
-### Meters & Batteries
-
-SolarEdge supports various kWh meters and batteries, and exposes their registers through a set of pre-defined registers on the inverter. The number of supported registers is hard-coded, per the SolarEdge SunSpec implementation, to three meters and two batteries. It is possible to query their registers:
-
-```
-    >>> inverter.meters()
-    {
-        'Meter1': Meter1(10.0.0.123:1502, connectionType.TCP: timeout=1, retries=3, unit=0x1)
-    }
-
-    >>> meter1 = inverter.meters()["Meter1"]
-    >>> meter1
-    Meter1(10.0.0.123:1502, connectionType.TCP: timeout=1, retries=3, unit=0x1)
-
-    >>> meter1.read_all()
-    {
-        'c_manufacturer': 'SolarEdge',
-        'c_model': 'PRO380-Mod',
-        'c_option': 'Export+Import',
-        'c_version': '2.19',
-        'c_serialnumber': '12312332',
-        'c_deviceaddress': 1,
-        'c_sunspec_did': 203,
-        'current': -13,
-        ...
-    }
-```
-
-Or similarly for batteries:
-
-```
-    >>> inverter.batteries()
-    {
-        'Battery1': Battery(10.0.0.123:1502, connectionType.TCP: timeout=1, retries=3, unit=0x1)
-    }
-
-    >>> battery1 = inverter.batteries()["Battery1"]
-    >>> battery1
-    Battery1(10.0.0.123:1502, connectionType.TCP: timeout=1, retries=3, unit=0x1)
-
-    >>> battery1.read_all()
-    {
-        ...
-    }
-```
-
-Calling `meters()` or `batteries()` on an inverter object is the recommended way of instantiating their objects. This way, checking for available devices, register offsetting, and sharing of the pymodbus connection is taken care of. If you want to to create a meter or battery object independently, do the following:
-
-```
-    # Meter #1 via the existing inverter connection
-    >>> meter1 = solaredge_modbus.Meter(parent=inverter, offset=0)
-
-    # Meter #2 over Modbus TCP, without a parent connection
-    >>> meter2 = solaredge_modbus.Meter(host="10.0.0.123", port=1502, offset=1)
-
-    # Battery #1 via the existing inverter connection
-    >>> battery1 = solaredge_modbus.Battery(parent=inverter, offset=0)
-
-    # Battery #1 over Modbus TCP, without a parent connection
-    >>> battery1 = solaredge_modbus.Battery(host="10.0.0.123", port=1502, offset=1)
-```
-
-There are two points to consider when doing this. You will need to manually pass the `parent` and `offset` parameters, which take care of sharing an existing Modbus connection, and set the correct register addresses. Use `offset` 0 for the first device, 1 for the second, and 2 for the third. If you do not pass a parent inverter object, you will need to supply connection parameters just like those required by the inverter object. Remember that a second Modbus TCP or Modbus RTU connection will fail when already in use by another inverter, meter, or battery object.
-
-**Note:** as I do not have access to a compatible kWh meter nor battery, this implementation is not thoroughly tested. If you have issues with this functionality, please open a GitHub issue.
 
 ## Contributing
 
