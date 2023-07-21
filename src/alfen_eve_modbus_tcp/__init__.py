@@ -477,3 +477,34 @@ class CarCharger(AlfenEve):
             8)
 
         }
+
+    def pause_charging(self):
+        PAUSE_CURRENT = 5
+        print(f"Stop Charging...")
+        value = self.read('modbus_slave_max_current')
+        current = value['modbus_slave_max_current']
+        print(f"\tCurrent usage in A: {current}")
+        if current > 5.5:
+            print(f"\tPausing...")
+            self.set_current(PAUSE_CURRENT)
+            print(f"\tPaused...")
+        else:
+            print(f"\tAlready paused charging...")
+
+    def switch_phase(self, phases):
+        if (phases == 1 or phases == 3):
+            current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            if current_phases == phases:
+                print(f"No need to switch, already at {phases} phase...")
+            else:
+                print(f"Switch to {phases} phase(s)...")
+                print(f"\tCurrent phase(s): {current_phases}")
+                self.write('charge_using_1_or_3_phases', phases)
+                print(f"\tSwitched...")
+                current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+                print(f"\tCurrent phase(s): {current_phases}")
+        else:
+            print(f"\tInvalid # of phases: {phases}...")
+
+    def set_current(self, current):
+        self.write('modbus_slave_max_current', current)

@@ -10,7 +10,7 @@ To install, either clone this project and install using `setuptools`:
 
 or install the package from PyPi:
 
-```pip3 install alfen_eve_modbus_tcp```
+```pip3 install alfen-eve-modbus-tcp```
 
 ## Usage
 
