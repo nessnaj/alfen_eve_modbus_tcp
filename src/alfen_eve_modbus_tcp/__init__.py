@@ -513,3 +513,23 @@ class CarCharger(AlfenEve):
 
     def set_current(self, current):
         self.write('modbus_slave_max_current', current)
+
+    def set_charge_profile(self, phases, current):
+        mode_3_state = self.read('mode_3_state')
+        status = MODE_3_STATE_MAP[mode_3_state['mode_3_state']]
+        if (status == "Charging" or status == "Connected"):
+            current_phases = int(self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases'])
+            syslog.syslog(f"Current Phase(s): {current_phases} versus Requested Phase(s): {phases}")
+            if current_phases != phases:
+                if status == "Charging":
+                    self.pause_charging()
+                    time.sleep(1)
+                self.switch_phase(phases)
+            self.set_current(current)
+            time.sleep(1)
+            phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            current = self.read('modbus_slave_max_current')['modbus_slave_max_current']
+            syslog.syslog(f"Charge Profile Set: Phase(s): {phases}; Current: {current} A.")
+        else:
+            syslog.syslog(f"Car is not connected: {status}, so no changes in charge profile applied.")
+
