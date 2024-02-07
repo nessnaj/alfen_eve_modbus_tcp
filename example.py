@@ -25,8 +25,18 @@ if __name__ == "__main__":
         timeout=args.timeout
     )
 
+    time.sleep(1)
+    status = car_charger.connect()
+    print(status)
+
     values = {}
+    values['mode_3_state'] = False
+    while values['mode_3_state'] == False:
+        print("Attempt")
+        values = car_charger.read("mode_3_state")
+
     values = car_charger.read_all()
+    print(values)
 
     if args.json:
         print(json.dumps(values, indent=4))
@@ -138,9 +148,23 @@ if __name__ == "__main__":
         print(f"\tSCN safe current: {values['scn_safe_current']}")
         print(f"\tSCN Modbus Slave Max Current enable: {alfen_eve_modbus_tcp.MODBUS_SLAVE_MAX_CURRENT_ENABLE_MAP[str(values['scn_modbus_slave_max_current_enable'])]}")
 
-        #print(car_charger.connect())
-        #print(car_charger.connected())
-        #print(car_charger)
-        #print(car_charger.read("c_manufacturer"))
-        #print(car_charger.read_all())
-        #print(car_charger.registers["modbus_slave_max_current"])
+    # print(car_charger.connect())
+    # time.sleep(1)
+    # print(car_charger.connected())
+    # print(car_charger)
+    # values = {}
+    # values['mode_3_state'] = False
+    # while values['mode_3_state'] == False:
+    #     print("Attempt")
+    #     values = car_charger.read("mode_3_state")
+    # print(values)
+    # print(car_charger.read("modbus_slave_max_current"))
+    #
+    # car_charger.write("modbus_slave_max_current", 7.0)
+    # time.sleep(1)
+    # print(car_charger.read("modbus_slave_max_current"))
+
+    #print(car_charger.read_all())
+    #print(car_charger.registers["mode_3_state"])
+    #print(car_charger.registers["modbus_slave_max_current"])
+    # car_charger.disconnect()
