@@ -520,8 +520,17 @@ class CarCharger(AlfenEve):
         # until correct value has been received before proceeding.
         mode_3_state = {}
         mode_3_state['mode_3_state'] = False
-        while mode_3_state['mode_3_state'] == False:
+        max_attempts = 5
+        attempts = 0
+        while (mode_3_state['mode_3_state'] == False) and (attempts < max_attempts):
+            attempts += 1
+            syslog.syslog(f"Attempt: {attempts}")
+            time.sleep(1)
             mode_3_state = self.read("mode_3_state")
+        if (mode_3_state['mode_3_state'] == False) and (attempts == max_attempts):
+            # Failed to read Car Charger. Exit
+            syslog.syslog(f"Error: Not able to read Car Charger, so no changes in charge profile applied.")
+            return
 
         status = MODE_3_STATE_MAP[mode_3_state['mode_3_state']]
         if (status == "Charging" or status == "Connected"):
