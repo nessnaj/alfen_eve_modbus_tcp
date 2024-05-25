@@ -89,7 +89,7 @@ MODBUS_SLAVE_MAX_CURRENT_ENABLE_MAP = {
 class AlfenEve:
 
     model = "Alfen Eve"
-    wordorder = Endian.Big
+    wordorder = Endian.BIG
 
     def __init__(
         self, host=False, port=False,
@@ -134,7 +134,7 @@ class AlfenEve:
             if len(result.registers) != length:
                 continue
 
-            return BinaryPayloadDecoder.fromRegisters(result.registers, byteorder=Endian.Big, wordorder=self.wordorder)
+            return BinaryPayloadDecoder.fromRegisters(result.registers, byteorder=Endian.BIG, wordorder=self.wordorder)
 
         return None
 
@@ -142,7 +142,7 @@ class AlfenEve:
         return self.client.write_registers(address=address, values=value, slave=slave)
 
     def _encode_value(self, data, dtype):
-        builder = BinaryPayloadBuilder(byteorder=Endian.Big, wordorder=self.wordorder)
+        builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=self.wordorder)
 
         try:
             if dtype == registerDataType.UINT16:
@@ -309,7 +309,7 @@ class CarCharger(AlfenEve):
 
     def __init__(self, *args, **kwargs):
         self.model = "Car Charger"
-        self.wordorder = Endian.Big
+        self.wordorder = Endian.BIG
 
         super().__init__(*args, **kwargs)
 
