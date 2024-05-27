@@ -29,11 +29,18 @@ if __name__ == "__main__":
     status = car_charger.connect()
     print(status)
 
+    #car_charger.set_charge_profile(3,6)
+
     values = {}
     values['mode_3_state'] = False
-    while values['mode_3_state'] == False:
+    #values['scn_name'] = False
+    #print(values)
+    #while (values['mode_3_state'] == False): # or (values['scn_name'] == False):
+    while (values['mode_3_state'] == False):
         print("Attempt")
         values = car_charger.read("mode_3_state")
+        #values = car_charger.read("scn_name")
+        #print(values)
 
     values = car_charger.read_all()
     print(values)
@@ -131,22 +138,24 @@ if __name__ == "__main__":
         print(f"\tModbus Slave Received Setpoint Accounted For: {alfen_eve_modbus_tcp.SETPOINT_MAP[str(values['modbus_slave_received_setpoint_accounted_for'])]}")
         print(f"\tPhases used for charging: {values['charge_using_1_or_3_phases']}")
 
-        print(f"\tSCN Name: {values['scn_name']}")
-        print(f"\tSCN Sockets: {values['scn_sockets']}")
-        print(f"\tSCN Total Consumption Phase L1: {values['scn_total_consumption_phase_l1']}")
-        print(f"\tSCN Total Consumption Phase L2: {values['scn_total_consumption_phase_l2']}")
-        print(f"\tSCN Total Consumption Phase L3: {values['scn_total_consumption_phase_l3']}")
-        print(f"\tSCN Actual Max Current Phase L1: {values['scn_actual_max_current_phase_l1']}")
-        print(f"\tSCN Actual Max Current Phase L2: {values['scn_actual_max_current_phase_l2']}")
-        print(f"\tSCN Actual Max Current Phase L3: {values['scn_actual_max_current_phase_l3']}")
-        print(f"\tSCN Max Current Phase L1: {values['scn_max_current_phase_l1']}")
-        print(f"\tSCN Max Current Phase L2: {values['scn_max_current_phase_l2']}")
-        print(f"\tSCN Max Current Phase L3: {values['scn_max_current_phase_l3']}")
-        print(f"\tMax current valid time L1: {values['remaining_valid_time_max_current_phase_l1']}")
-        print(f"\tMax current valid time L2: {values['remaining_valid_time_max_current_phase_l2']}")
-        print(f"\tMax current valid time L3: {values['remaining_valid_time_max_current_phase_l3']}")
-        print(f"\tSCN safe current: {values['scn_safe_current']}")
-        print(f"\tSCN Modbus Slave Max Current enable: {alfen_eve_modbus_tcp.MODBUS_SLAVE_MAX_CURRENT_ENABLE_MAP[str(values['scn_modbus_slave_max_current_enable'])]}")
+        #print(f"\tSCN Name: {values['scn_name']}")
+        #print(car_charger.read("scn_name"))
+        #print(f"\tSCN Sockets: {values['scn_sockets']}")
+        #print(f"\tSCN Total Consumption Phase L1: {values['scn_total_consumption_phase_l1']}")
+        #print(f"\tSCN Total Consumption Phase L2: {values['scn_total_consumption_phase_l2']}")
+        #print(f"\tSCN Total Consumption Phase L3: {values['scn_total_consumption_phase_l3']}")
+        #print(f"\tSCN Actual Max Current Phase L1: {values['scn_actual_max_current_phase_l1']}")
+        #print(f"\tSCN Actual Max Current Phase L2: {values['scn_actual_max_current_phase_l2']}")
+        #print(f"\tSCN Actual Max Current Phase L3: {values['scn_actual_max_current_phase_l3']}")
+        #print(f"\tSCN Max Current Phase L1: {values['scn_max_current_phase_l1']}")
+        #print(f"\tSCN Max Current Phase L2: {values['scn_max_current_phase_l2']}")
+        #print(f"\tSCN Max Current Phase L3: {values['scn_max_current_phase_l3']}")
+        #print(f"\tMax current valid time L1: {values['remaining_valid_time_max_current_phase_l1']}")
+        #print(f"\tMax current valid time L2: {values['remaining_valid_time_max_current_phase_l2']}")
+        #print(f"\tMax current valid time L3: {values['remaining_valid_time_max_current_phase_l3']}")
+        #print(f"\tSCN safe current: {values['scn_safe_current']}")
+        #print(car_charger.read("scn_safe_current"))
+        #print(f"\tSCN Modbus Slave Max Current enable: {alfen_eve_modbus_tcp.MODBUS_SLAVE_MAX_CURRENT_ENABLE_MAP[str(values['scn_modbus_slave_max_current_enable'])]}")
 
     # print(car_charger.connect())
     # time.sleep(1)

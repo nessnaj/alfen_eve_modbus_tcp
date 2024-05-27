@@ -495,14 +495,35 @@ class CarCharger(AlfenEve):
 
     def switch_phase(self, phases):
         if (phases == 1 or phases == 3):
-            current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            max_attempts = 5
+            attempts = 0
+            current_phases = False
+            while (current_phases == False) and (attempts < max_attempts):
+                attempts += 1
+                syslog.syslog(f"Attempt: {attempts}")
+                time.sleep(1)
+                current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+            if (current_phases == False) and (attempts == max_attempts):
+                # Failed to read Car Charger. Exit
+                syslog.syslog(f"Error: Not able to read Car Charger, so no changes in charge profile applied.")
+                return
             if current_phases == phases:
                 syslog.syslog(f"No need to switch, already at {phases} phase...")
             else:
                 try:
                     syslog.syslog(f"Switch to {phases} phase(s)...")
                     syslog.syslog(f"Current phase(s): {current_phases}")
-                    self.write('charge_using_1_or_3_phases', phases)
+                    attempts = 0
+                    while (current_phases != phases) and (attempts < max_attempts):
+                        attempts += 1
+                        syslog.syslog(f"Attempt: {attempts}")
+                        self.write('charge_using_1_or_3_phases', phases)
+                        time.sleep(1)
+                        current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+                    if (current_phases != phases) and (attempts == max_attempts):
+                        # Failed to read Car Charger. Exit
+                        syslog.syslog(f"Error: Not able to read Car Charger, so no changes in charge profile applied.")
+                        return
                     syslog.syslog("Switched...")
                 except Exception as e:
                     syslog.syslog(e)
