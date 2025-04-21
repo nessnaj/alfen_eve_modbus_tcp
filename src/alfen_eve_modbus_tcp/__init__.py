@@ -15,8 +15,8 @@ from pymodbus.client import ModbusTcpClient
 from pymodbus.register_read_message import ReadHoldingRegistersResponse
 
 
-RETRIES = 3
-TIMEOUT = 1
+MAX_RETRIES = 3
+RETRY_DELAY = 1
 
 class registerType(enum.Enum):
     INPUT = 1
@@ -94,7 +94,7 @@ class AlfenEve:
 
     def __init__(
         self, host=False, port=False,
-        timeout=TIMEOUT, retries=RETRIES,
+        timeout=RETRY_DELAY, retries=MAX_RETRIES,
         parent=False
     ):
 
@@ -468,22 +468,66 @@ class CarCharger(AlfenEve):
             "scn_actual_max_current_phase_l1": (0xc8, 0x583, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
             "scn_actual_max_current_phase_l2": (0xc8, 0x585, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
             "scn_actual_max_current_phase_l3": (0xc8, 0x587, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
-            "scn_max_current_phase_l1": (0xc8, 0x589, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
-            "scn_max_current_phase_l2": (0xc8, 0x58b, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
-            "scn_max_current_phase_l3": (0xc8, 0x58d, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 8),
-            "remaining_valid_time_max_current_phase_l1": (0xc8, 0x58f, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 8),
-            "remaining_valid_time_max_current_phase_l2": (0xc8, 0x591, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 8),
-            "remaining_valid_time_max_current_phase_l3": (0xc8, 0x593, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 8),
-            "scn_safe_current": (0xc8, 0x595, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Configured SCN safe current", "1A", 8),
+            "scn_max_current_phase_l1": (0xc8, 0x589, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 9),
+            "scn_max_current_phase_l2": (0xc8, 0x58b, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 9),
+            "scn_max_current_phase_l3": (0xc8, 0x58d, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "", "1A", 9),
+            "remaining_valid_time_max_current_phase_l1": (0xc8, 0x58f, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 9),
+            "remaining_valid_time_max_current_phase_l2": (0xc8, 0x591, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 9),
+            "remaining_valid_time_max_current_phase_l3": (0xc8, 0x593, 2, registerType.HOLDING, registerDataType.UINT32, int, "Max current valid time", "1s", 9),
+            "scn_safe_current": (0xc8, 0x595, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Configured SCN safe current", "1A", 9),
             "scn_modbus_slave_max_current_enable": (0xc8, 0x597, 1, registerType.HOLDING, registerDataType.UINT16, int, "1: Enabled; 0: Disabled", "1A",
-            8)
+            9)
 
         }
+
+    def read_with_retry(self, key):
+        for attempt in range(1, self.retries + 1):
+            try:
+                self.connect()
+                value = self.read(key)
+                self.disconnect()
+                return value
+            except Exception as e:
+                if attempt < self.retries:
+                    time.sleep(self.timeout)
+                else:
+                    syslog.syslog(f"Failed to read {key} after {self.retries} attempts: {e}")
+                    raise
+        return False
+
+    def write_with_retry(self, key: str, value: int) -> bool:
+        """Write a value to the car_charger with retries."""
+        for attempt in range(1, self.retries + 1):
+            try:
+                self.connect()
+                self.write(key, value)
+                self.disconnect()
+                return True
+            except Exception as e:
+                if attempt < self.retries:
+                    time.sleep(self.timeout)
+                else:
+                    syslog.syslog(f"Failed to write {key} after {self.retries} attempts: {e}")
+                    raise
+        return False
+
+    def get_status(self):
+        mode_3_state = self.read_with_retry("mode_3_state")
+        status = MODE_3_STATE_MAP[mode_3_state['mode_3_state']]
+        return status
+
+    def get_phases(self):
+        phases = self.read_with_retry('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+        return phases
+
+    def get_current(self):
+        current = self.read_with_retry('modbus_slave_max_current')['modbus_slave_max_current']
+        return current
 
     def pause_charging(self):
         PAUSE_CURRENT = 5
         syslog.syslog("Stop Charging...")
-        value = self.read('modbus_slave_max_current')
+        value = self.read_with_retry('modbus_slave_max_current')
         current = value['modbus_slave_max_current']
         syslog.syslog(f"Current usage in A: {current}")
         if current > 5.5:
@@ -495,68 +539,31 @@ class CarCharger(AlfenEve):
 
     def switch_phase(self, phases):
         if (phases == 1 or phases == 3):
-            max_attempts = 5
-            attempts = 0
-            current_phases = False
-            while (current_phases == False) and (attempts < max_attempts):
-                attempts += 1
-                syslog.syslog(f"Attempt: {attempts}")
-                time.sleep(1)
-                current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
-            if (current_phases == False) and (attempts == max_attempts):
-                # Failed to read Car Charger. Exit
-                syslog.syslog(f"Error: Not able to read Car Charger, so no changes in charge profile applied.")
-                return
+            current_phases = self.get_phases()
+
             if current_phases == phases:
                 syslog.syslog(f"No need to switch, already at {phases} phase...")
             else:
                 try:
                     syslog.syslog(f"Switch to {phases} phase(s)...")
                     syslog.syslog(f"Current phase(s): {current_phases}")
-                    attempts = 0
-                    while (current_phases != phases) and (attempts < max_attempts):
-                        attempts += 1
-                        syslog.syslog(f"Attempt: {attempts}")
-                        self.write('charge_using_1_or_3_phases', phases)
-                        time.sleep(1)
-                        current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
-                    if (current_phases != phases) and (attempts == max_attempts):
-                        # Failed to read Car Charger. Exit
-                        syslog.syslog(f"Error: Not able to read Car Charger, so no changes in charge profile applied.")
-                        return
-                    syslog.syslog("Switched...")
+                    self.write_with_retry('charge_using_1_or_3_phases', phases)
                 except Exception as e:
                     syslog.syslog(e)
                 finally:
-                    current_phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
+                    current_phases = self.get_phases()
                     syslog.syslog(f"Current phase(s): {current_phases}")
         else:
             syslog.syslog(f"Invalid # of phases: {phases}...")
 
     def set_current(self, current):
-        self.write('modbus_slave_max_current', current)
+        self.write_with_retry('modbus_slave_max_current', current)
 
     def set_charge_profile(self, phases, current):
-        # Somehow with latest firmware upgrade, the registers read do not always return a value, so keep on trying
-        # until correct value has been received before proceeding.
-        mode_3_state = {}
-        mode_3_state['mode_3_state'] = False
-        max_attempts = 5
-        attempts = 0
-        while (mode_3_state['mode_3_state'] == False) and (attempts < max_attempts):
-            attempts += 1
-            syslog.syslog(f"Attempt: {attempts}")
-            time.sleep(1)
-            mode_3_state = self.read("mode_3_state")
-        if (mode_3_state['mode_3_state'] == False) and (attempts == max_attempts):
-            # Failed to read Car Charger. Exit
-            syslog.syslog(f"Error: Not able to read Car Charger, so no changes in charge profile applied.")
-            return
-
-        status = MODE_3_STATE_MAP[mode_3_state['mode_3_state']]
+        status = self.get_status()
         if (status == "Charging" or status == "Connected"):
-            current_phases = int(self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases'])
-            momentary_current = self.read('modbus_slave_max_current')['modbus_slave_max_current']
+            current_phases = int(self.get_phases())
+            momentary_current = self.get_current()
             syslog.syslog(f"Currently Charge Profile is: Phase(s): {current_phases}; Current: {momentary_current} A.")
             syslog.syslog(f"Current Phase(s): {current_phases} versus Requested Phase(s): {phases}")
             if current_phases != phases:
@@ -566,9 +573,8 @@ class CarCharger(AlfenEve):
                 self.switch_phase(phases)
             self.set_current(current)
             time.sleep(1)
-            phases = self.read('charge_using_1_or_3_phases')['charge_using_1_or_3_phases']
-            current = self.read('modbus_slave_max_current')['modbus_slave_max_current']
+            phases = self.get_phases()
+            current = self.get_current()
             syslog.syslog(f"Charge Profile Set: Phase(s): {phases}; Current: {current} A.")
         else:
             syslog.syslog(f"Car is not connected: {status}, so no changes in charge profile applied.")
-
